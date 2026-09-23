@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
+import zipfile
 from pathlib import Path
 
 import pandas as pd
@@ -123,6 +125,7 @@ class StreamlitCallSimulator:
         )
 
         self._render_reference_recordings()
+        self._render_transcript_browser()
 
         selected_profile_id = str(profile_detail["id"])
         selected_difficulty = self.difficulties[selected_difficulty_label]
@@ -340,6 +343,174 @@ class StreamlitCallSimulator:
             for index, transcript in enumerate(st.session_state.get("style_examples", []), start=1):
                 st.caption(f"Transcription brute {index}")
                 st.write(transcript[:400])
+
+    def _render_transcript_browser(self) -> None:
+        """Browse stored transcripts and download them from the UI."""
+        with st.sidebar.expander("Transcriptions enregistrées", expanded=False):
+            calls = self._list_transcript_calls()
+            if not calls:
+                st.caption("Aucune transcription dans `data/call_transcripts/`.")
+                return
+
+            st.write(f"**{len(calls)}** appel(s) disponible(s)")
+            labels = [call["label"] for call in calls]
+            selected_label = st.selectbox(
+                "Choisir un appel",
+                labels,
+                key="transcript_browser_select",
+            )
+            selected = next(call for call in calls if call["label"] == selected_label)
+            files = selected["files"]
+
+            st.caption("Fichiers : " + ", ".join(sorted(files.keys())))
+
+            preview_kind = "dialogue" if "dialogue_txt" in files or "dialogue_json" in files else "raw"
+            preview_path = files.get("dialogue_txt") or files.get("txt") or files.get("dialogue_json") or files.get("json")
+            if preview_path is not None:
+                preview = self._transcript_preview(preview_path, kind=preview_kind)
+                st.text_area(
+                    "Aperçu",
+                    value=preview,
+                    height=180,
+                    key=f"transcript_preview_{selected['stem']}",
+                )
+
+            download_cols = st.columns(2)
+            with download_cols[0]:
+                if "dialogue_txt" in files:
+                    st.download_button(
+                        "Dialogue (.txt)",
+                        data=files["dialogue_txt"].read_bytes(),
+                        file_name=files["dialogue_txt"].name,
+                        mime="text/plain",
+                        use_container_width=True,
+                        key=f"dl_dialogue_txt_{selected['stem']}",
+                    )
+                elif "txt" in files:
+                    st.download_button(
+                        "Texte (.txt)",
+                        data=files["txt"].read_bytes(),
+                        file_name=files["txt"].name,
+                        mime="text/plain",
+                        use_container_width=True,
+                        key=f"dl_txt_{selected['stem']}",
+                    )
+            with download_cols[1]:
+                if "dialogue_json" in files:
+                    st.download_button(
+                        "Dialogue (.json)",
+                        data=files["dialogue_json"].read_bytes(),
+                        file_name=files["dialogue_json"].name,
+                        mime="application/json",
+                        use_container_width=True,
+                        key=f"dl_dialogue_json_{selected['stem']}",
+                    )
+                elif "json" in files:
+                    st.download_button(
+                        "JSON (.json)",
+                        data=files["json"].read_bytes(),
+                        file_name=files["json"].name,
+                        mime="application/json",
+                        use_container_width=True,
+                        key=f"dl_json_{selected['stem']}",
+                    )
+
+            extra_buttons: list[tuple[str, Path, str]] = []
+            if "dialogue_txt" in files and "txt" in files:
+                extra_buttons.append(("Brut (.txt)", files["txt"], "text/plain"))
+            if "dialogue_json" in files and "json" in files:
+                extra_buttons.append(("Brut (.json)", files["json"], "application/json"))
+            for label, path, mime in extra_buttons:
+                st.download_button(
+                    label,
+                    data=path.read_bytes(),
+                    file_name=path.name,
+                    mime=mime,
+                    use_container_width=True,
+                    key=f"dl_extra_{path.name}",
+                )
+
+            zip_bytes = self._zip_transcript_files(list(files.values()))
+            st.download_button(
+                "Tout cet appel (ZIP)",
+                data=zip_bytes,
+                file_name=f"{selected['stem']}_transcripts.zip",
+                mime="application/zip",
+                use_container_width=True,
+                key=f"dl_zip_one_{selected['stem']}",
+            )
+
+            all_paths = [path for call in calls for path in call["files"].values()]
+            st.download_button(
+                "Télécharger toutes les transcriptions (ZIP)",
+                data=self._zip_transcript_files(all_paths),
+                file_name="call_transcripts_all.zip",
+                mime="application/zip",
+                use_container_width=True,
+                key="dl_zip_all_transcripts",
+            )
+
+    @staticmethod
+    def _list_transcript_calls() -> list[dict]:
+        TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+        by_stem: dict[str, dict[str, Path]] = {}
+        for path in sorted(TRANSCRIPTS_DIR.iterdir()):
+            if not path.is_file():
+                continue
+            name = path.name
+            if name.endswith("_dialogue.json"):
+                stem = name[: -len("_dialogue.json")]
+                by_stem.setdefault(stem, {})["dialogue_json"] = path
+            elif name.endswith("_dialogue.txt"):
+                stem = name[: -len("_dialogue.txt")]
+                by_stem.setdefault(stem, {})["dialogue_txt"] = path
+            elif name.endswith(".json"):
+                stem = name[: -len(".json")]
+                by_stem.setdefault(stem, {})["json"] = path
+            elif name.endswith(".txt"):
+                stem = name[: -len(".txt")]
+                by_stem.setdefault(stem, {})["txt"] = path
+
+        calls: list[dict] = []
+        for stem, files in sorted(by_stem.items()):
+            label = stem.replace("___", " ").replace("_", " ")
+            if len(label) > 48:
+                label = label[:45] + "…"
+            calls.append({"stem": stem, "label": label, "files": files})
+        return calls
+
+    @staticmethod
+    def _transcript_preview(path: Path, *, kind: str, max_chars: int = 2500) -> str:
+        try:
+            if path.suffix == ".json":
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                if kind == "dialogue" and isinstance(payload.get("turns"), list):
+                    lines = []
+                    for turn in payload["turns"][:40]:
+                        role = str(turn.get("role", "?")).capitalize()
+                        text = str(turn.get("text", "")).strip()
+                        if text:
+                            lines.append(f"{role}: {text}")
+                    text = "\n".join(lines)
+                else:
+                    text = str(payload.get("text") or json.dumps(payload, ensure_ascii=False, indent=2))
+            else:
+                text = path.read_text(encoding="utf-8")
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+            return f"Impossible de lire le fichier : {exc}"
+        text = text.strip()
+        if len(text) > max_chars:
+            return text[:max_chars] + "\n…"
+        return text
+
+    @staticmethod
+    def _zip_transcript_files(paths: list[Path]) -> bytes:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for path in paths:
+                if path.is_file():
+                    archive.write(path, arcname=path.name)
+        return buffer.getvalue()
 
     def _start_conversation(self, profile: str, difficulty: str) -> None:
         engine = ConversationEngine.from_paths(
