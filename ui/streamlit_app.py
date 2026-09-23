@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import io
 import json
 import os
@@ -345,8 +346,11 @@ class StreamlitCallSimulator:
                 st.write(transcript[:400])
 
     def _render_transcript_browser(self) -> None:
-        """Browse stored transcripts and download them from the UI."""
+        """Browse stored transcripts and download them from the UI (access-code gated)."""
         with st.sidebar.expander("Transcriptions enregistrées", expanded=False):
+            if not self._transcript_access_granted():
+                return
+
             calls = self._list_transcript_calls()
             if not calls:
                 st.caption("Aucune transcription dans `data/call_transcripts/`.")
@@ -449,6 +453,37 @@ class StreamlitCallSimulator:
                 use_container_width=True,
                 key="dl_zip_all_transcripts",
             )
+
+            if st.button("Verrouiller l'accès", use_container_width=True, key="transcript_lock"):
+                st.session_state.transcript_access_ok = False
+                st.rerun()
+
+    def _transcript_access_granted(self) -> bool:
+        """Require TRANSCRIPT_ACCESS_CODE before showing/downloading transcripts."""
+        expected = os.environ.get("TRANSCRIPT_ACCESS_CODE", "").strip()
+        if not expected:
+            st.warning(
+                "Code d'accès non configuré. Ajoutez `TRANSCRIPT_ACCESS_CODE=...` dans `.env`."
+            )
+            return False
+
+        if st.session_state.get("transcript_access_ok"):
+            return True
+
+        st.caption("Accès protégé — entrez le code pour voir et télécharger les transcriptions.")
+        code = st.text_input(
+            "Code d'accès",
+            type="password",
+            key="transcript_access_code_input",
+            placeholder="••••••••",
+        )
+        if st.button("Déverrouiller", use_container_width=True, key="transcript_unlock"):
+            if hmac.compare_digest(code.strip(), expected):
+                st.session_state.transcript_access_ok = True
+                st.rerun()
+            else:
+                st.error("Code incorrect.")
+        return False
 
     @staticmethod
     def _list_transcript_calls() -> list[dict]:
@@ -567,6 +602,7 @@ class StreamlitCallSimulator:
         st.session_state.setdefault("pending_agent_transcript", "")
         st.session_state.setdefault("last_spoken_customer_index", -1)
         st.session_state.setdefault("processed_audio_hashes", set())
+        st.session_state.setdefault("transcript_access_ok", False)
 
     def _transcribe_upload(self, upload: object) -> str:
         audio_bytes = upload.getvalue()
