@@ -1,0 +1,3850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur v2 — Vous êtes le Prospect · Lead and Connect</title>
+    <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --lc-navy: #002D58;
+            --lc-navy-light: #003d75;
+            --lc-orange: #D9802E;
+            --lc-teal: #00827F;
+            --lc-grey: #666666;
+            --lc-grey-light: #999999;
+            --primary: #002D58;
+            --primary-glow: #003d75;
+            --accent: #00827F;
+            --accent-warm: #D9802E;
+            --success: #00827F;
+            --danger: #c0392b;
+            --dark: #002D58;
+            --dark-card: #ffffff;
+            --dark-elevated: #f4f6f8;
+            --text: #333333;
+            --text-muted: #666666;
+            --border: #e0e4e8;
+            --glass: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 40%, #f4f8fb 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 45% at 8% 0%, rgba(0, 130, 127, 0.10), transparent 55%),
+                radial-gradient(ellipse 55% 35% at 96% 4%, rgba(217, 128, 46, 0.12), transparent 50%),
+                radial-gradient(ellipse 40% 30% at 50% 100%, rgba(0, 45, 88, 0.05), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-shell {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 24px 40px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 36px 28px 40px;
+            margin: 0 auto 28px;
+            max-width: 1280px;
+            background: linear-gradient(135deg, #002D58 0%, #003d75 45%, #00827F 100%);
+            border: none;
+            border-radius: 22px;
+            color: #ffffff;
+            box-shadow:
+                0 20px 44px rgba(0, 45, 88, 0.24),
+                0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: -50% 15% auto -25%;
+            height: 160%;
+            background: radial-gradient(circle, rgba(217, 128, 46, 0.28), transparent 62%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(217, 128, 46, 0.22);
+            border: 1px solid rgba(217, 128, 46, 0.45);
+            color: #ffd4a8;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(217, 128, 46, 0.35); }
+            50% { box-shadow: 0 0 0 8px rgba(217, 128, 46, 0); }
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(24px, 4vw, 34px);
+            font-weight: 800;
+            color: #ffffff;
+            background: none;
+            -webkit-text-fill-color: #ffffff;
+            position: relative;
+            z-index: 1;
+            line-height: 1.15;
+        }
+
+        .hero p {
+            margin: 10px 0 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        .hero a {
+            display: inline-block;
+            margin-top: 14px;
+            color: var(--lc-orange);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .hero a:hover { color: #f0a050; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.94);
+            padding: 22px;
+            border-radius: 18px;
+            border: 1px solid rgba(0, 45, 88, 0.08);
+            margin-bottom: 20px;
+            box-shadow: 0 10px 28px rgba(0, 45, 88, 0.07);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 34px rgba(0, 45, 88, 0.11);
+        }
+
+        .card h3 {
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h3::before {
+            content: "";
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(180deg, var(--lc-navy), var(--lc-orange));
+            border-radius: 2px;
+        }
+
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr; } }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        select, input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            margin: 6px 0 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--lc-navy);
+            box-shadow: 0 0 0 3px rgba(0, 45, 88, 0.12);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px 18px;
+            margin: 10px 0 0;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+        }
+
+        button:hover:not(:disabled) { transform: translateY(-1px); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+        #startBtn {
+            background: linear-gradient(135deg, #00827F, #006b68);
+            color: white;
+            box-shadow: 0 8px 24px rgba(0, 130, 127, 0.38);
+        }
+
+        #startBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #009995, #00827F);
+            box-shadow: 0 12px 28px rgba(0, 130, 127, 0.45);
+        }
+
+        #stopBtn {
+            background: var(--lc-orange);
+            color: white;
+            box-shadow: 0 4px 16px rgba(217, 128, 46, 0.35);
+        }
+
+        #stopBtn:hover:not(:disabled) { background: #c46f22; }
+
+        #talkBtn {
+            background: var(--lc-navy);
+            color: white;
+            height: 64px;
+            font-size: 17px;
+            box-shadow: 0 4px 16px rgba(0, 45, 88, 0.25);
+        }
+
+        #talkBtn:hover:not(:disabled) { background: var(--lc-navy-light); }
+
+        #sendTextBtn {
+            width: auto;
+            min-width: 100px;
+            margin: 0;
+            background: var(--lc-teal);
+            color: white;
+            border: none;
+        }
+
+        #testVoiceBtn {
+            width: auto;
+            margin: 12px auto 0;
+            display: block;
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-muted);
+            font-size: 13px;
+            padding: 10px 20px;
+        }
+
+        .call-experience {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .call-stage {
+            display: grid;
+            grid-template-columns: minmax(260px, 400px) 1fr;
+            gap: 20px;
+            align-items: start;
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 55%, #0f172a 100%);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 45, 88, 0.18);
+        }
+
+        @media (max-width: 900px) {
+            .call-stage { grid-template-columns: 1fr; }
+        }
+
+        .video-shell {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .prospect-stage-card { display: none; }
+
+        .prospect-frame-wrap { display: contents; }
+
+        .prospect-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            max-height: min(72vh, 720px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 2px rgba(255, 255, 255, 0.08),
+                0 24px 48px rgba(0, 0, 0, 0.45);
+            transition: box-shadow 0.4s, transform 0.35s;
+            background: #111827;
+        }
+
+        .prospect-frame.speaking {
+            box-shadow:
+                0 0 0 3px var(--lc-teal),
+                0 0 40px rgba(0, 130, 127, 0.45),
+                0 24px 48px rgba(0, 0, 0, 0.5);
+            animation: videoSpeakPulse 0.85s ease-in-out infinite alternate;
+        }
+
+        @keyframes videoSpeakPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.015); }
+        }
+
+        .prospect-frame.thinking {
+            box-shadow:
+                0 0 0 3px var(--lc-orange),
+                0 0 30px rgba(217, 128, 46, 0.35),
+                0 24px 48px rgba(0, 0, 0, 0.45);
+        }
+
+        .prospect-frame img,
+        .prospect-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 18%;
+            display: block;
+            transition: filter 0.4s, transform 0.35s;
+        }
+
+        .prospect-media {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .prospect-video {
+            position: absolute;
+            inset: 0;
+            opacity: 1;
+        }
+
+        .prospect-video.speaking-layer {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 1;
+        }
+
+        .prospect-video.avatar-live {
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .lipsync-overlay .lipsync-mouth {
+            width: 100%;
+            height: 100%;
+            border-radius: 50% 50% 45% 45%;
+            background: linear-gradient(180deg, rgba(80, 40, 35, 0.85) 0%, rgba(120, 55, 48, 0.9) 100%);
+            box-shadow: inset 0 -2px 6px rgba(0, 0, 0, 0.35);
+            transform: scale(1, 0.35);
+            transform-origin: center center;
+            opacity: 0.5;
+            transition: opacity 0.05s linear;
+        }
+
+        .prospect-frame.lipsync-active .prospect-video.speaking-layer {
+            opacity: 0.35;
+        }
+
+        .prospect-frame.lipsync-active .lipsync-overlay {
+            opacity: 1;
+        }
+
+        .prospect-frame.speaking .prospect-video.speaking-layer {
+            opacity: 1;
+        }
+
+        .prospect-fallback {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .prospect-frame.video-fallback .prospect-video { display: none; }
+        .prospect-frame.video-fallback .prospect-fallback { display: block; }
+
+        .prospect-frame.gender-female img { object-position: center 15%; }
+        .prospect-frame.gender-male img { object-position: center 22%; }
+
+        .prospect-frame.speaking img,
+        .prospect-frame.speaking .prospect-fallback {
+            filter: brightness(1.06) saturate(1.08);
+        }
+
+        .prospect-frame.video-ready.speaking {
+            animation: none;
+        }
+
+        .prospect-frame.video-ready.speaking img {
+            animation: none;
+        }
+
+        .video-vignette {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 0, 0, 0.05) 0%,
+                transparent 35%,
+                transparent 55%,
+                rgba(0, 0, 0, 0.82) 100%
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .live-caption {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 56px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.45;
+            text-align: center;
+            z-index: 6;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.25s, transform 0.25s;
+            border-left: 4px solid transparent;
+        }
+
+        .live-caption.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .live-caption.prospect { border-left-color: var(--lc-orange); }
+        .live-caption.agent { border-left-color: var(--lc-teal); }
+        .live-caption.listening {
+            border-left-color: #60a5fa;
+            font-style: italic;
+        }
+
+        .prospect-frame.mood-tense img {
+            filter: contrast(1.05) saturate(0.9) brightness(0.97);
+        }
+
+        .prospect-frame.mood-angry img {
+            filter: contrast(1.12) saturate(1.1) brightness(0.94) sepia(0.08);
+        }
+
+        .speak-waves {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 5;
+        }
+
+        .prospect-frame.speaking .speak-waves { opacity: 1; }
+
+        .speak-waves span {
+            display: block;
+            width: 5px;
+            height: 20px;
+            background: #fff;
+            border-radius: 3px;
+            animation: waveBar 0.5s ease-in-out infinite;
+        }
+
+        .speak-waves span:nth-child(2) { animation-delay: 0.1s; height: 28px; }
+        .speak-waves span:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes waveBar {
+            0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        .call-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 24px;
+            border: 2px solid transparent;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .prospect-frame.speaking .call-ring {
+            border-color: rgba(0, 130, 127, 0.55);
+            animation: ringPulse 1.2s ease-out infinite;
+        }
+
+        @keyframes ringPulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.06); opacity: 0; }
+        }
+
+        .prospect-meta {
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        .prospect-name {
+            font-size: 17px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.02em;
+        }
+
+        .prospect-status-label {
+            margin-top: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            display: inline-block;
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        .prospect-status-label.active {
+            color: var(--lc-teal);
+            border-color: rgba(0, 130, 127, 0.5);
+            background: rgba(0, 130, 127, 0.12);
+        }
+
+        .controls-dock {
+            padding: 8px 4px 4px;
+            align-self: stretch;
+        }
+
+        .call-stage .controls-dock {
+            background: transparent;
+            border: none;
+        }
+
+        .call-stage .controls-dock .status-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .call-stage .hint { color: rgba(255, 255, 255, 0.55); }
+        .call-stage label { color: rgba(255, 255, 255, 0.75); }
+
+        .controls-dock .status-badge { margin-bottom: 12px; }
+
+        .transcript-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 360px;
+        }
+
+        .transcript-card h3 { flex-shrink: 0; }
+
+        #log {
+            flex: 1;
+            min-height: 280px;
+            max-height: none;
+            overflow-y: auto;
+            padding: 16px;
+            background: #fafbfc;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            scroll-behavior: smooth;
+        }
+
+        body.call-active .hero { display: none; }
+        body.call-active .settings-card { display: none; }
+        body.call-active .app-shell { padding-top: 12px; }
+
+        #log::-webkit-scrollbar { width: 6px; }
+        #log::-webkit-scrollbar-thumb { background: #d0d5db; border-radius: 3px; }
+
+        .agent-msg {
+            margin: 10px 0;
+            padding: 14px 16px;
+            background: rgba(0, 45, 88, 0.06);
+            border-left: 4px solid var(--lc-navy);
+            border-radius: 0 10px 10px 0;
+            animation: msgIn 0.35s ease-out;
+        }
+
+        .prospect-msg {
+            margin: 10px 0;
+            padding: 14px 16px;
+            background: rgba(0, 130, 127, 0.08);
+            border-left: 4px solid var(--lc-teal);
+            border-radius: 0 10px 10px 0;
+            animation: msgIn 0.35s ease-out;
+        }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .agent-msg strong, .prospect-msg strong {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+            opacity: 0.85;
+        }
+
+        #evaluation {
+            display: none;
+            border-left: 4px solid var(--accent-warm);
+            scroll-margin-top: 20px;
+        }
+
+        .transcript-recap summary { cursor: pointer; margin-bottom: 8px; list-style: none; }
+        .transcript-recap summary::-webkit-details-marker { display: none; }
+        .transcript-recap summary h4 { margin: 0; display: inline; font-size: 15px; color: var(--text); }
+        .transcript-recap-body { padding: 4px 0 8px; }
+        .transcript-line {
+            margin: 8px 0;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.45;
+            color: var(--text);
+        }
+        .transcript-line.user { background: rgba(0, 45, 88, 0.06); border-left: 3px solid var(--lc-navy); }
+        .transcript-line.assistant { background: rgba(0, 130, 127, 0.08); border-left: 3px solid var(--lc-teal); }
+
+        .eval-header { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+        .eval-score-badge { display: inline-flex; flex-direction: column; align-items: center; min-width: 110px; padding: 14px 18px; border-radius: 12px; color: white; font-weight: bold; }
+        .eval-level-excellent { background: var(--success); }
+        .eval-level-bon { background: var(--primary); }
+        .eval-level-ameliorer { background: var(--accent-warm); color: var(--dark); }
+        .eval-level-coaching { background: var(--danger); }
+        .score-num { font-size: 28px; line-height: 1; }
+        .score-label { font-size: 13px; margin-top: 4px; opacity: 0.95; }
+        .eval-title { margin: 0 0 4px 0; color: var(--primary-glow); }
+        .eval-subtitle { margin: 0; color: var(--text-muted); font-size: 14px; }
+        .eval-table-wrap { overflow-x: auto; margin: 16px 0; }
+        .eval-table { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text); }
+        .eval-table th, .eval-table td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+        .eval-table th { background: rgba(99, 102, 241, 0.15); font-weight: 600; }
+        .eval-table .section-row td { background: rgba(99, 102, 241, 0.1); font-weight: 700; color: var(--primary-glow); }
+        .eval-table .col-score, .eval-table .col-max { text-align: center; white-space: nowrap; width: 90px; }
+        .eval-section { margin-top: 18px; padding: 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); }
+        .eval-section h4 { margin: 0 0 8px 0; font-size: 15px; color: var(--text); }
+        .eval-section ul { margin: 0; padding-left: 20px; color: var(--text-muted); }
+        .eval-interpretation { margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+
+        .coaching-panel {
+            margin: 16px 0;
+            padding: 16px 18px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 45, 88, 0.06), rgba(0, 130, 127, 0.08));
+            border: 1px solid rgba(0, 130, 127, 0.22);
+        }
+        .coaching-panel h4 { margin: 0 0 8px 0; font-size: 15px; color: var(--lc-navy); }
+        .coaching-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .coaching-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .coaching-chip strong { color: var(--lc-navy); }
+        .coaching-focus { margin: 0 0 10px 0; padding-left: 18px; color: var(--text); font-size: 13px; line-height: 1.5; }
+        .coaching-focus li { margin-bottom: 4px; }
+        .coaching-suggestion {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(217, 128, 46, 0.1);
+            border: 1px dashed rgba(217, 128, 46, 0.45);
+            font-size: 13px;
+            color: var(--text);
+        }
+        .coaching-suggestion button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: var(--lc-orange);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .coaching-post {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 10px;
+            background: rgba(0, 45, 88, 0.05);
+            border: 1px solid rgba(0, 45, 88, 0.15);
+        }
+        .coaching-post h4 { margin: 0 0 8px 0; color: var(--lc-navy); }
+        .coaching-trend-up { color: var(--success); }
+        .coaching-trend-down { color: var(--danger); }
+
+        .benchmark-models-btn {
+            margin-top: 10px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .benchmark-models-btn:disabled { opacity: 0.6; cursor: wait; }
+        .benchmark-models-result {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .benchmark-models-result table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .benchmark-models-result th, .benchmark-models-result td {
+            border-bottom: 1px solid var(--border);
+            padding: 6px 4px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .benchmark-models-result .best-row { background: rgba(0, 130, 127, 0.08); font-weight: 600; }
+
+        .exam-panel {
+            margin: 16px 0;
+            padding: 18px 20px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(0, 45, 88, 0.08), rgba(217, 128, 46, 0.1));
+            border: 2px solid rgba(0, 45, 88, 0.2);
+            box-shadow: 0 4px 18px rgba(0, 45, 88, 0.06);
+        }
+        .exam-panel h4 { margin: 0 0 6px 0; font-size: 16px; color: var(--lc-navy); }
+        .exam-panel .exam-sub { margin: 0 0 14px 0; font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+        .exam-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: var(--lc-navy);
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .exam-badge.preview { background: var(--lc-orange); }
+        .exam-formateur-access {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: rgba(0, 45, 88, 0.04);
+            border: 1px dashed rgba(0, 45, 88, 0.22);
+        }
+        .exam-formateur-access label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--lc-navy);
+            margin-bottom: 8px;
+        }
+        .exam-formateur-row {
+            display: flex;
+            gap: 8px;
+        }
+        .exam-formateur-row input {
+            flex: 1;
+            min-width: 0;
+        }
+        .exam-formateur-row button {
+            flex-shrink: 0;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: var(--lc-navy);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .exam-formateur-msg {
+            margin: 8px 0 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .exam-locked-notice {
+            margin: 12px 0 0 0;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(0, 45, 88, 0.06);
+            border: 1px solid rgba(0, 45, 88, 0.14);
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text);
+        }
+        .exam-locked-notice strong { color: var(--lc-navy); }
+        .exam-steps { list-style: none; margin: 0; padding: 0; }
+        .exam-step {
+            display: grid;
+            grid-template-columns: 28px 1fr auto;
+            gap: 10px 12px;
+            align-items: start;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 45, 88, 0.1);
+        }
+        .exam-step:last-child { border-bottom: none; }
+        .exam-step-num {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: rgba(0, 45, 88, 0.12);
+            color: var(--lc-navy);
+            font-weight: 800;
+            font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .exam-step.done .exam-step-num { background: var(--success); color: #fff; }
+        .exam-step.active .exam-step-num { background: var(--lc-orange); color: #fff; }
+        .exam-step-title { font-weight: 700; font-size: 14px; color: var(--lc-navy); margin: 0 0 4px 0; }
+        .exam-step-meta { font-size: 12px; color: var(--text-muted); margin: 0 0 6px 0; }
+        .exam-objections { font-size: 11px; color: var(--text); margin: 0; padding-left: 16px; line-height: 1.45; }
+        .exam-objections li { margin-bottom: 2px; }
+        .exam-step-score { font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .exam-step-score.pass { color: var(--success); }
+        .exam-step-score.fail { color: var(--danger); }
+        .exam-launch-btn {
+            margin-top: 6px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--lc-navy);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .exam-launch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .exam-summary {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .exam-cert { color: var(--success); font-weight: 700; }
+        .exam-scenario-card {
+            margin: 12px 0;
+            padding: 14px 16px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 45, 88, 0.15);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .exam-scenario-card h5 { margin: 0 0 8px 0; font-size: 14px; color: var(--lc-navy); }
+        .exam-scenario-card ul { margin: 8px 0 0 0; padding-left: 18px; }
+        .exam-scenario-card li { margin-bottom: 4px; }
+        .training-scenario-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 6px 0 14px 0;
+            line-height: 1.45;
+        }
+        .training-scenario-hint strong { color: var(--lc-navy); }
+        .exam-eval-banner {
+            margin-bottom: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            background: rgba(0, 45, 88, 0.06);
+            border-left: 4px solid var(--lc-navy);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+
+        .status-idle { background: #eef1f4; color: var(--text-muted); }
+        .status-listening { background: rgba(0, 130, 127, 0.12); color: var(--lc-teal); }
+        .status-thinking { background: rgba(217, 128, 46, 0.12); color: var(--lc-orange); }
+
+        .hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.45; }
+        .hint a { color: var(--accent); }
+        .hint code { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+        #recordTimer { font-size: 13px; color: var(--danger); font-weight: bold; min-height: 18px; text-align: center; }
+
+        .text-row { display: flex; gap: 10px; margin-top: 6px; }
+        .text-row input { flex: 1; margin: 0; }
+
+        #voiceToggle { width: auto; margin: 10px 0 0; accent-color: var(--primary); }
+
+        #apiKeyStatus { color: var(--success) !important; }
+
+        html[data-hosted="1"] #apiKeySection,
+        html[data-hosted="1"] #apiKeyStatus,
+        html[data-hosted="1"] #apiHint {
+            display: none !important;
+        }
+        #ttsStatus, #dbStatus { font-size: 12px; margin: 6px 0; line-height: 1.4; text-align: center; }
+
+        #retryEvalBtn {
+            background: var(--lc-navy);
+            color: white;
+            width: auto;
+            margin-top: 12px;
+        }
+
+        .calibration-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 14px 0 4px;
+            font-weight: normal;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .calibration-label input { width: auto; margin: 0; accent-color: var(--primary); }
+
+        .hero-deco {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        .hero { position: relative; overflow: hidden; }
+
+        .hero-deco span {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(217, 128, 46, 0.08);
+            animation: floatOrb 8s ease-in-out infinite;
+        }
+
+        .hero-deco span:nth-child(1) { top: -30px; left: 10%; animation-delay: 0s; }
+        .hero-deco span:nth-child(2) { bottom: -40px; right: 15%; width: 80px; height: 80px; animation-delay: 2s; }
+        .hero-deco span:nth-child(3) { top: 40%; right: 5%; width: 50px; height: 50px; animation-delay: 4s; }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
+            50% { transform: translateY(-12px) scale(1.05); opacity: 1; }
+        }
+
+        .hero-logo {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 8px;
+        }
+
+        .hero-logo em { color: var(--lc-orange); font-style: normal; }
+
+        .settings-card { position: relative; overflow: hidden; }
+
+        .settings-card::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            width: 140px; height: 140px;
+            background: radial-gradient(circle, rgba(0,130,127,0.08), transparent 70%);
+            pointer-events: none;
+        }
+
+        .profile-preview {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin: 12px 0 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0,45,88,0.05), rgba(0,130,127,0.06));
+            border: 1px solid var(--border);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .profile-preview-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            background: var(--lc-navy);
+            color: white;
+        }
+
+        .profile-preview-text strong {
+            display: block;
+            font-size: 14px;
+            color: var(--lc-navy);
+        }
+
+        .profile-preview-text span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .profile-preview.mood-angry { border-color: rgba(217,128,46,0.4); background: linear-gradient(135deg, rgba(217,128,46,0.08), rgba(192,57,43,0.04)); }
+        .profile-preview.mood-angry .profile-preview-icon { background: var(--lc-orange); }
+        .profile-preview.mood-tense .profile-preview-icon { background: #5a6a7a; }
+
+        .call-journey {
+            display: flex;
+            gap: 6px;
+            margin: 0 0 16px;
+            padding: 4px;
+            background: var(--dark-elevated);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .journey-step {
+            flex: 1;
+            text-align: center;
+            padding: 10px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 8px;
+            transition: all 0.35s;
+            line-height: 1.2;
+        }
+
+        .journey-step.active {
+            background: var(--lc-navy);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,45,88,0.2);
+        }
+
+        .journey-step.done {
+            background: rgba(0,130,127,0.15);
+            color: var(--lc-teal);
+        }
+
+        .live-stats {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .live-stats.visible { display: grid; }
+
+        .stat-pill {
+            text-align: center;
+            padding: 10px 8px;
+            border-radius: 10px;
+            background: white;
+            border: 1px solid var(--border);
+        }
+
+        .stat-pill .stat-val {
+            display: block;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--lc-navy);
+            line-height: 1.1;
+        }
+
+        .stat-pill .stat-lbl {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .stat-pill.highlight .stat-val { color: var(--lc-teal); }
+        .stat-pill.warn .stat-val { color: var(--lc-orange); }
+
+        #startBtn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #startBtn::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            animation: btnShine 3s ease-in-out infinite;
+        }
+
+        @keyframes btnShine {
+            0% { left: -100%; }
+            60%, 100% { left: 150%; }
+        }
+
+        details.advanced-options {
+            margin: 12px 0 4px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        details.advanced-options summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--lc-navy);
+            padding: 8px 0;
+        }
+
+        details.advanced-options[open] summary { margin-bottom: 8px; }
+
+        .transcript-card h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .live-dot {
+            display: none;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #e74c3c;
+            animation: livePulse 1.2s ease-in-out infinite;
+        }
+
+        .live-dot.on { display: inline-block; }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        #log:empty::before {
+            content: "La conversation s'affichera ici en temps réel…";
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 14px;
+        }
+    
+
+        .agent-frame {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            max-height: min(72vh, 720px);
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(165deg, #1e3a5f 0%, #0f172a 55%, #1a2744 100%);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.08), 0 24px 48px rgba(0,0,0,0.45);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: box-shadow 0.35s, transform 0.35s;
+        }
+        .agent-frame.speaking {
+            box-shadow: 0 0 0 3px var(--lc-teal), 0 0 40px rgba(0,130,127,0.45), 0 24px 48px rgba(0,0,0,0.5);
+            animation: videoSpeakPulse 0.85s ease-in-out infinite alternate;
+        }
+        .agent-frame.thinking {
+            box-shadow: 0 0 0 3px var(--lc-orange), 0 0 30px rgba(217,128,46,0.35), 0 24px 48px rgba(0,0,0,0.45);
+        }
+        .agent-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--lc-teal), var(--lc-navy));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+        }
+        .agent-brand {
+            margin-top: 20px;
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            padding: 0 16px;
+        }
+        .agent-brand strong { display: block; font-size: 20px; font-weight: 800; }
+        .agent-brand span { font-size: 13px; opacity: 0.75; }
+        .hint-box {
+            background: rgba(217,128,46,0.08);
+            border: 1px solid rgba(217,128,46,0.25);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 13px;
+            margin: 12px 0 16px;
+        }
+        .hint-box ul { margin: 8px 0 0; padding-left: 18px; }
+        .scenario-preview {
+            margin: 10px 0 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(0,130,127,0.08);
+            border: 1px solid rgba(0,130,127,0.2);
+            font-size: 13px;
+            color: var(--text);
+        }
+        .agent-frame.speaking .speak-waves { opacity: 1; }
+        .agent-frame .speak-waves { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); }
+        .v2-badge { background: rgba(0,130,127,0.35); color: #7dffe8; }
+
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-deco"><span></span><span></span><span></span></div>
+        <div class="hero-logo">LEAD &amp; CONNECT</div>
+        <span class="hero-badge v2-badge">Version 2 — Mode Prospect</span>
+        <h1>Vous jouez le prospect · L'IA joue l'agent commercial</h1>
+        <p>Posez des objections et observez comment l'agent IA (Samuel) adapte son discours à <strong>votre profil</strong> et au <strong>modèle LLM</strong> choisi — tout en suivant la structure d'appel Ogenies.</p>
+        <a href="simulation.html" id="v1Link">← Version 1 : entraînement agent (vous vendez)</a>
+    </div>
+
+    <div class="app-shell">
+
+    <div class="card settings-card">
+        <h3>Configuration — votre rôle de prospect</h3>
+
+        <div id="apiKeySection">
+            <label for="apiKey">Clé API OpenRouter</label>
+            <input type="password" id="apiKey" placeholder="sk-or-v1-...">
+        </div>
+        <p class="hint" id="apiKeyStatus" style="display:none;">✅ Clé configurée par l'administrateur</p>
+        <p class="hint" id="apiHint">OpenRouter : <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a></p>
+
+        <div class="settings-grid">
+            <div>
+                <label for="profileSelect">Profil prospect à jouer (vous)</label>
+                <select id="profileSelect">
+                    <option value="agressif">😤 Agressif — « Ça ne m'intéresse pas »</option>
+                    <option value="presse">⏱️ Pressé — « Je n'ai pas le temps »</option>
+                    <option value="mefiant_fournisseur">🛡️ Méfiant fournisseur — « Je ne veux pas changer »</option>
+                    <option value="mefiant_rgpd">🔒 Méfiant RGPD — « Comment avez-vous mon numéro ? »</option>
+                    <option value="curieux">💡 Curieux — questions sur le comparatif</option>
+                </select>
+            </div>
+            <div>
+                <label for="levelSelect">Difficulté de vos objections</label>
+                <select id="levelSelect">
+                    <option value="debutant">🟢 Débutant</option>
+                    <option value="intermediaire">🟠 Intermédiaire</option>
+                    <option value="avance">🔴 Avancé</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="profile-preview" id="profilePreview">
+            <div class="profile-preview-icon" id="profilePreviewIcon">😤</div>
+            <div class="profile-preview-text">
+                <strong id="profilePreviewTitle">Prospect agressif — vous jouez ce rôle</strong>
+                <span id="profilePreviewDesc">Objection directe — testez la gestion de l'accroche</span>
+            </div>
+        </div>
+
+        <div class="hint-box" id="objectionHints">
+            <strong>💡 Objections suggérées (à dire en tant que prospect) :</strong>
+            <ul id="hintList"></ul>
+        </div>
+
+        <details class="advanced-options" id="advancedOptions">
+            <summary>Options avancées (modèle IA agent)</summary>
+            <label for="nvidiaModelSelect">Modèle OpenRouter (agent IA)</label>
+            <select id="nvidiaModelSelect">
+                <optgroup label="Payants — recommandés (crédits OpenRouter)">
+                    <option value="google/gemini-2.5-flash" selected>Gemini 2.5 Flash — recommandé</option>
+                    <option value="openai/gpt-4o-mini">GPT-4o mini — fiable, économique</option>
+                    <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku — rapide</option>
+                    <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super 120B</option>
+                    <option value="nvidia/nemotron-3-nano-30b-a3b">Nemotron 3 Nano 30B — rapide</option>
+                </optgroup>
+                <optgroup label="Gratuits — quota limité">
+                    <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super 120B (gratuit)</option>
+                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (gratuit)</option>
+                    <option value="google/gemma-4-31b-it:free">Gemma 4 31B (gratuit)</option>
+                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen3 Next 80B (gratuit)</option>
+                    <option value="openai/gpt-oss-120b:free">GPT-OSS 120B (gratuit)</option>
+                    <option value="openai/gpt-oss-20b:free">GPT-OSS 20B (gratuit, rapide)</option>
+                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 Llama 405B (gratuit)</option>
+                    <option value="nvidia/nemotron-3-ultra-550b-a55b:free">Nemotron 3 Ultra 550B (gratuit)</option>
+                    <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron 3 Nano 30B (gratuit)</option>
+                    <option value="openrouter/free">OpenRouter Free Router (aléatoire)</option>
+                </optgroup>
+            </select>
+            <p class="hint">Modèle payant par défaut (Gemini 2.5 Flash) — plus stable pour l'agent Samuel. Vos 5$ OpenRouter couvrent des centaines d'appels d'entraînement.</p>
+            <button type="button" id="benchmarkModelsBtn" class="benchmark-models-btn">⚡ Comparer 4 modèles gratuits (test rapide)</button>
+            <div id="benchmarkModelsResult" class="benchmark-models-result" style="display:none;"></div>
+        </details>
+
+        <div class="scenario-preview" id="scenarioPreview">Lancez l'appel pour générer votre personnage prospect.</div>
+
+        <button type="button" id="startBtn">📞 Décrocher — l'IA agent appelle en premier</button>
+    </div>
+
+    <div class="call-experience">
+        <div class="call-stage">
+            <div class="video-shell">
+                <div class="agent-frame" id="agentFrame">
+                    <div class="agent-avatar" aria-hidden="true">👨‍💼</div>
+                    <div class="agent-brand">
+                        <strong>Samuel</strong>
+                        <span>Ogenies</span>
+                    </div>
+                    <div class="video-vignette"></div>
+                    <div class="live-caption agent" id="liveCaption" aria-live="polite"></div>
+                    <div class="speak-waves" id="agentWaves"><span></span><span></span><span></span></div>
+                </div>
+                <div class="prospect-meta">
+                    <div class="prospect-name">Agent IA commercial</div>
+                    <div class="prospect-status-label" id="agentStatusLabel">En attente d'appel</div>
+                </div>
+            </div>
+            <div class="controls-dock">
+                <div style="text-align:center;">
+                    <div id="status" class="status-badge status-idle">Ligne inactive</div>
+                    <div id="recordTimer"></div>
+                    <p class="hint" id="micStatus"></p>
+                    <p class="hint" id="speechPreview" style="min-height:20px;color:#7dffe8;font-weight:600;"></p>
+                </div>
+                <button type="button" id="talkBtn" disabled>🎤 Parler en tant que prospect</button>
+                <p class="hint" style="text-align:center;">Micro : le texte s'affiche <strong>en direct</strong> pendant que vous parlez. Cliquez Arrêter puis Envoyer (corrigez si besoin).</p>
+                <label for="textInput">Votre réplique prospect</label>
+                <div class="text-row">
+                    <input type="text" id="textInput" placeholder="Ex : Ça ne m'intéresse pas…" disabled>
+                    <button type="button" id="sendTextBtn" disabled>Envoyer</button>
+                </div>
+                <p class="hint" id="ttsStatus">Voix IA agent…</p>
+                <p class="hint" id="dbStatus">MySQL…</p>
+                <label class="calibration-label">
+                    <input type="checkbox" id="voiceToggle" checked> Voix de l'agent IA
+                </label>
+                <button type="button" id="stopBtn" disabled>📴 Raccrocher et analyser l'agent IA</button>
+            </div>
+        </div>
+
+        <div class="card transcript-card">
+            <h3>Transcription <span class="live-dot" id="liveDot"></span></h3>
+            <div class="call-journey" id="callJourney">
+                <div class="journey-step active" data-step="0">📞 Accroche</div>
+                <div class="journey-step" data-step="1">🔍 Découverte</div>
+                <div class="journey-step" data-step="2">🏠 Qualification</div>
+                <div class="journey-step" data-step="3">📊 Conso / PDL</div>
+                <div class="journey-step" data-step="4">⚡ OHM → Offre</div>
+                <div class="journey-step" data-step="5">✅ Closing</div>
+            </div>
+            <div class="live-stats" id="liveStats">
+                <div class="stat-pill"><span class="stat-val" id="statDuration">00:00</span><span class="stat-lbl">Durée</span></div>
+                <div class="stat-pill warn"><span class="stat-val" id="statObjections">0</span><span class="stat-lbl">Vos répliques</span></div>
+                <div class="stat-pill highlight"><span class="stat-val" id="statTurns">0</span><span class="stat-lbl">Échanges</span></div>
+            </div>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <div id="evaluation" class="card">
+        <h3>Analyse — Comment l'IA agent a traité vos objections</h3>
+        <div id="evalContent"></div>
+    </div>
+
+    </div>
+
+    <script src="assets/agent_call_structure.js"></script>
+    <script>
+    (function () {
+        const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+        const DEFAULT_AGENT_MODEL = "google/gemini-2.5-flash";
+        const AGENT_MODEL_STORAGE_KEY = "simulator_v2_agent_model";
+        const OPENROUTER_FALLBACK_MODELS = [
+            "google/gemini-2.5-flash",
+            "openai/gpt-4o-mini",
+            "nvidia/nemotron-3-super-120b-a12b",
+            "anthropic/claude-3.5-haiku",
+            "nvidia/nemotron-3-nano-30b-a3b",
+            "meta-llama/llama-3.3-70b-instruct:free"
+        ];
+        const BENCHMARK_FREE_MODELS = [
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-4-31b-it:free",
+            "qwen/qwen3-next-80b-a3b-instruct:free"
+        ];
+        const PROFILE_META = {
+            agressif: { icon: "😤", title: "Prospect agressif", desc: "Objection directe — testez la gestion de l'accroche", mood: "mood-angry" },
+            presse: { icon: "⏱️", title: "Prospect pressé", desc: "Manque de temps — l'agent doit être ultra-bref", mood: "mood-tense" },
+            mefiant_fournisseur: { icon: "🛡️", title: "Méfiant fournisseur", desc: "Ne veut pas changer — rassurance et comparatif", mood: "" },
+            mefiant_rgpd: { icon: "🔒", title: "Méfiant RGPD", desc: "Questions sur les données et la légalité", mood: "mood-tense" },
+            curieux: { icon: "💡", title: "Prospect curieux", desc: "Ouvert mais exigeant sur les détails", mood: "" }
+        };
+        let callTimerInterval = null;
+        let callElapsedSec = 0;
+        const TRAINING_MODE = "train_prospect";
+
+        const PROFILE_ADAPTATIONS = {
+            agressif: {
+                tone: "Calme et posé face à l'hostilité — jamais agressif en retour.",
+                pace: "Ralenti : empathie d'abord, une question ensuite.",
+                focus: "Reconnaître le dérangement, lever la méfiance avant la découverte.",
+                confirm: ["Je comprends", "Vous avez raison d'être prudent", "Je vous entends"]
+            },
+            presse: {
+                tone: "Direct et respectueux du temps du prospect.",
+                pace: "1 à 2 phrases max par réplique.",
+                focus: "Aller vite au fournisseur et au montant ; condenser la qualification.",
+                confirm: ["Compris", "Très bien", "Je fais court"]
+            },
+            mefiant_fournisseur: {
+                tone: "Rassurant, conseil honnête — pas de pression.",
+                pace: "Normal, avec insistance sur « comparateur indépendant » et « sans obligation ».",
+                focus: "Montrer qu'on peut conseiller de garder son fournisseur si c'est déjà le meilleur tarif.",
+                confirm: ["Je note", "D'accord", "C'est noté"]
+            },
+            mefiant_rgpd: {
+                tone: "Transparent et pédagogique sur les données.",
+                pace: "Prendre le temps d'expliquer RGPD / appels non nominatifs avant de questionner.",
+                focus: "Crédibilité et conformité avant toute collecte d'information.",
+                confirm: ["Bien sûr", "Je comprends votre question", "C'est légitime"]
+            },
+            curieux: {
+                tone: "Pédagogue, répond aux questions avant d'enchaîner.",
+                pace: "Normal à détaillé — le prospect aime comprendre.",
+                focus: "Expliquer OHM Energy puis l'offre Home Energy (HP/HC, rétractation 14 jours) si demandé.",
+                confirm: ["Excellente question", "Très bien", "C'est parfait"]
+            }
+        };
+
+        const LEVEL_ADAPTATIONS = {
+            debutant: "Prospect peu résistant : tu peux avancer plus vite dans la structure s'il coopère.",
+            intermediaire: "Prospect modérément résistant : alterne valeur (gratuit, sans engagement) et questions.",
+            avance: "Prospect très résistant : patience, 2 à 3 reformulations par objection avant d'envisager une clôture."
+        };
+
+        const PROFILES = {
+            agressif: {
+                label: "Agressif",
+                agentContext: "Le prospect est hostile au début (« ça ne m'intéresse pas »). Reste calme, reformule, explique l'étude tarifaire sans forcer.",
+                objections: {
+                    debutant: ["Ça ne m'intéresse pas.", "Bon, c'est pour quoi exactement ?", "Vous êtes qui ?"],
+                    intermediaire: ["Ça ne m'intéresse pas.", "Vous appelez tout le temps !", "Pourquoi moi ?", "Je ne suis pas convaincu."],
+                    avance: ["Arrêtez de m'appeler !", "Ça ne m'intéresse pas !", "Vous êtes des arnaqueurs.", "Je raccroche."]
+                }
+            },
+            presse: {
+                label: "Pressé",
+                agentContext: "Le prospect manque de temps. 1re objection : rassurer « bref et précis ». S'il insiste vraiment : proposer un rappel. Sinon ultra-bref, une question à la fois.",
+                objections: {
+                    debutant: ["Je suis pressé, faites court.", "C'est pour quoi ?", "D'accord mais vite."],
+                    intermediaire: ["Je suis pressé.", "Je suis satisfait de mon fournisseur.", "Pas envie de démarches.", "Je veux voir l'offre d'abord."],
+                    avance: ["Pas le temps !", "Rappelez-moi un autre jour.", "J'ai une réunion, je dois partir."]
+                }
+            },
+            mefiant_fournisseur: {
+                label: "Méfiant fournisseur",
+                agentContext: "Le prospect ne veut pas changer de fournisseur. Rassure : comparatif gratuit, pas d'obligation, conseil honnête.",
+                objections: {
+                    debutant: ["Je suis chez EDF, pourquoi vous m'appelez ?", "Je ne veux pas changer.", "C'est gratuit ce comparatif ?"],
+                    intermediaire: ["Je ne veux pas changer de fournisseur.", "Je suis satisfait chez EDF.", "Vous êtes sûr que je paie trop cher ?"],
+                    avance: ["Je ne changerai JAMAIS !", "Arrêtez avec vos comparatifs !", "Je n'ai pas confiance."]
+                }
+            },
+            mefiant_rgpd: {
+                label: "Méfiant RGPD",
+                agentContext: "Le prospect questionne la légalité (nouvelle loi, Bloctel, consentement, DGCCRF). Utilise les scripts collègue + hausse 18 % + facture régul. Jamais « base de données ».",
+                objections: {
+                    debutant: ["Comment avez-vous eu mon numéro ?", "Mes données sont protégées ?", "Qui êtes-vous ?"],
+                    intermediaire: ["Comment avez-vous eu mes données ?", "Pourquoi accéder à ma consommation ?", "Pourquoi mon IBAN ?"],
+                    avance: ["Je ne donne pas mes données.", "C'est une arnaque ?", "Ne me rappelez plus."]
+                }
+            },
+            curieux: {
+                label: "Curieux",
+                agentContext: "Le prospect est ouvert mais pose beaucoup de questions. Réponds avec pédagogie sur comparatif, qualité élec, rétractation.",
+                objections: {
+                    debutant: ["Comment savez-vous si un fournisseur est mieux ?", "La qualité reste la même ?", "C'est gratuit et sans engagement ?"],
+                    intermediaire: ["Pourquoi Home Energie ?", "Comment je fais des économies concrètement ?", "Pourquoi deux ans de contrat ?"],
+                    avance: ["Je compare plusieurs offres.", "Tarif base ou heures pleines ?", "Rétractation combien de jours ?"]
+                }
+            }
+        };
+
+        const COACHING_KEY = "simulator_agent_coaching_v2";
+        const SCENARIO_SUPPLIERS = ["EDF", "Engie", "TotalEnergies", "Vattenfall", "Ekwateur"];
+        const SCENARIO_FIRST = ["Jean", "Marie", "Sophie", "Pierre", "Claire", "Thomas"];
+        const SCENARIO_LAST = ["Dupont", "Martin", "Bernard", "Leroy", "Moreau", "Petit"];
+        const COLLEAGUE_NAMES = ["Florian", "Camille", "Julien", "Julia", "Charles", "Adèle"];
+        const FEMALE_COLLEAGUE_NAMES = new Set(["Camille", "Julia", "Adèle", "Adèle"]);
+        const FEMALE_SCENARIO_FIRST = new Set([
+            "Marie", "Sophie", "Claire", "Isabelle", "Nathalie", "Camille", "Julie", "Émilie", "Emilie",
+            "Anne", "Céline", "Celine", "Virginie", "Sandrine", "Valérie", "Valerie", "Patricia", "Hélène", "Helene"
+        ]);
+
+        function getColleagueGenderPhrase() {
+            const c = getColleagueName();
+            return (FEMALE_COLLEAGUE_NAMES.has(c) ? "ma collègue " : "mon collègue ") + c;
+        }
+
+        function getProspectCivility() {
+            const fn = callScenario?.firstName || "";
+            if (FEMALE_SCENARIO_FIRST.has(fn)) return "Madame";
+            return "Monsieur";
+        }
+
+        function buildColleagueContactScript() {
+            return "Nous avons pris votre contact suite à votre discussion avec "
+                + getColleagueGenderPhrase()
+                + " pour votre facture d'électricité et l'augmentation qui s'applique dessus avec l'hiver qui arrive.";
+        }
+
+        function buildNouvelleLoiReplyScripts() {
+            const colleague = getColleagueGenderPhrase();
+            const colleagueName = getColleagueName();
+            const agentName = getAgentDisplayName();
+            const civility = getProspectCivility();
+            const identity = getProspectIdentityRef();
+            const address = getProspectAddressRef();
+            const contactScript = buildColleagueContactScript();
+            return {
+                pas_droit_appeler: contactScript,
+                centre_appels: contactScript,
+                jamais_accord: "Je comprends " + civility + " que vous n'ayez pas le souvenir de cet appel — c'est que vous êtes harcelé encore malgré les interventions de l'État dans ce sens. "
+                    + "Mais sachez que je vous appelle suite à votre entretien avec " + colleague
+                    + " concernant la hausse de 18 % qui s'applique sur votre facture. Vous avez déjà fait le plus gros du chemin : j'ai juste à confirmer quelques informations pour vous donner l'estimation des économies que vous pouvez faire.",
+                origine_numero: "Vous avez eu une conversation avec " + colleague
+                    + " pour votre facture d'électricité. Mon appel est simplement pour confirmer quelques détails ou vous communiquer la différence que vous pouvez avoir sur votre facture de régularisation.",
+                retrait_autorisation: "Bien entendu, je vais bien le mentionner et vous mettre dans une blacklist pour qu'aucun Génie-Opérateur ne vous recontacte. "
+                    + "Cependant, vous pouvez toujours nous recontacter vous-même en cas de besoin et demander " + agentName + ".",
+                dgccrf: "Je comprends votre position et je comprends que vous soyez frustré par les enchaînements d'appels sans raison. "
+                    + "Sachez que cet appel est la suite de votre conversation avec " + colleague
+                    + " : mon appel a pour but de confirmer ce qui a été dit entre vous et vous communiquer la différence de votre facture après changement de fournisseur, si vous êtes d'accord.",
+                bloctel: "Effectivement Bloctel interdit le démarchage téléphonique aux personnes inscrites dans ses listes, mais aujourd'hui nous parlons d'un cas différent. "
+                    + contactScript,
+                prouver_consentement: "Bien sûr, vous avez échangé avec " + colleague
+                    + " à qui vous avez communiqué quelques informations qui m'ont été importantes pour étudier votre comparatif. "
+                    + "Vous êtes bien " + civility + " " + identity + ", résidant à " + address + " ? "
+                    + "Bien, c'est tout ce que j'ai eu — je ne sais pas si vous vous en souvenez, mais vous aviez parlé avec " + colleague + "."
+            };
+        }
+
+        function hashAgentName(name) {
+            let h = 0;
+            const s = String(name || "samuel").toLowerCase().trim();
+            for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
+            return Math.abs(h);
+        }
+
+        function getColleagueName() {
+            const cfg = getCfg();
+            return COLLEAGUE_NAMES[hashAgentName(cfg.agentName || "samuel") % COLLEAGUE_NAMES.length];
+        }
+
+        function getAgentDisplayName() {
+            return "Samuel";
+        }
+
+        function getProspectIdentityRef() {
+            const s = callScenario;
+            return (s && s.firstName && s.lastName) ? (s.firstName + " " + s.lastName) : "Monsieur/Madame";
+        }
+
+        function getProspectAddressRef() {
+            const turns = prospectUserTurns().join(" ");
+            const m = turns.match(/\d{1,4}[^,\n]{3,80},\s*\d{5}\s+[A-Za-zÀ-ÿ\-'\s]+/);
+            if (m) return m[0].trim();
+            const s = callScenario;
+            return s ? ("l'adresse que vous m'avez communiquée lors de votre échange (" + s.city + ")") : "l'adresse communiquée lors de votre échange avec mon collègue";
+        }
+
+        function colleagueContactScript() {
+            return buildColleagueContactScript();
+        }
+
+        function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function buildLegalObjectionScriptBlock() {
+            const s = buildNouvelleLoiReplyScripts();
+            return "\n\nSCRIPTS OBJECTIONS NOUVELLE LOI (OBLIGATOIRE — traiter l'objection AVANT de continuer l'appel ; reformule légèrement si besoin mais garde le FOND exact) :"
+                + "\n1. « Selon la nouvelle loi, vous n'avez pas le droit de m'appeler » → " + s.pas_droit_appeler
+                + "\n2. « Je n'ai jamais donné mon accord » → " + s.jamais_accord
+                + "\n3. « Où avez-vous obtenu mon numéro ? » → " + s.origine_numero
+                + "\n4. « Je retire mon autorisation » → " + s.retrait_autorisation
+                + "\n5. « Je vais vous signaler à la DGCCRF » → " + s.dgccrf
+                + "\n6. « Centre d'appels qui ne respecte pas la loi » → " + s.centre_appels
+                + "\n7. « Je suis inscrit sur Bloctel » → " + s.bloctel
+                + "\n8. « Prouvez-moi que vous avez mon consentement » → " + s.prouver_consentement;
+        }
+
+        function createCallScenario() {
+            const bill = pickRandom([58, 62, 65, 72, 78, 84, 91]);
+            const offer = Math.max(48, bill - pickRandom([5, 8, 10, 12, 15]));
+            const cities = [
+                { city: "Toulon", zip: "83200" },
+                { city: "Marseille", zip: "13008" },
+                { city: "Nice", zip: "06000" },
+                { city: "Lyon", zip: "69003" }
+            ];
+            const loc = pickRandom(cities);
+            return {
+                firstName: pickRandom(SCENARIO_FIRST),
+                lastName: pickRandom(SCENARIO_LAST),
+                supplier: pickRandom(SCENARIO_SUPPLIERS),
+                yearsAtSupplier: pickRandom(["2 ans", "3 ans", "plus de 4 ans", "5 ans"]),
+                billAmount: bill,
+                offerTarget: offer,
+                regularization: pickRandom([80, 90, 110]),
+                surfaceM2: pickRandom([55, 70, 85, 95]),
+                occupants: pickRandom([1, 2, 3]),
+                kwhYear: pickRandom([1200, 1500, 1800, 2200]),
+                city: loc.city,
+                zip: loc.zip,
+                pdl: (function () {
+                    let s = "";
+                    for (let i = 0; i < 14; i++) s += Math.floor(Math.random() * 10);
+                    return s;
+                })()
+            };
+        }
+
+        let callScenario = createCallScenario();
+        const AGENT_SCRIPT_COMPACT_LINES = 38;
+
+        function buildColleagueOpeningCore() {
+            const c = getColleagueName();
+            return "Je vous appelle suite à l'échange que vous avez eu avec mon collègue " + c
+                + " concernant votre facture d'énergie. Je reprends donc votre dossier afin de lancer un comparatif et vous proposer une offre plus avantageuse.";
+        }
+
+        function buildAgentOpening(level) {
+            const profile = getProfile();
+            const core = buildColleagueOpeningCore();
+            const openings = {
+                debutant: {
+                    default: "Bonjour, je suis Samuel, de la société Ogenies. " + core,
+                    presse: "Bonjour, Samuel d'Ogenies. " + core + " Promis, je serai bref.",
+                    agressif: "Bonjour, Samuel d'Ogenies. " + core,
+                    curieux: "Bonjour, je suis Samuel de la société Ogenies. " + core
+                },
+                intermediaire: {
+                    default: "Bonjour, Samuel d'Ogenies. " + core,
+                    presse: "Bonjour, Samuel d'Ogenies. " + core + " Je serai rapide.",
+                    mefiant_rgpd: "Bonjour, Samuel d'Ogenies. " + core
+                },
+                avance: {
+                    default: "Bonjour, Samuel d'Ogenies. " + core
+                }
+            };
+            const bucket = openings[level] || openings.intermediaire;
+            return bucket[profile] || bucket.default || openings.debutant.default;
+        }
+
+        function getProfileAdaptation() {
+            return PROFILE_ADAPTATIONS[getProfile()] || PROFILE_ADAPTATIONS.curieux;
+        }
+
+        function getProfileAdaptationBlock(compact) {
+            const p = PROFILES[getProfile()];
+            const a = getProfileAdaptation();
+            if (compact) {
+                return "\nPROFIL : " + p.label + " — " + a.tone + " " + a.pace;
+            }
+            return "\n\nADAPTATION PROFIL PROSPECT (« " + p.label + " ») :"
+                + "\n- Ton : " + a.tone
+                + "\n- Rythme : " + a.pace
+                + "\n- Priorité : " + a.focus
+                + "\n- Confirmations possibles (varie) : " + (a.confirm || []).join(", ")
+                + "\n- Garde la STRUCTURE Samuel mais reformule avec tes propres mots selon ce profil.";
+        }
+
+        function getLevelAdaptationBlock() {
+            return "\nNIVEAU OBJECTIONS : " + (LEVEL_ADAPTATIONS[getLevel()] || LEVEL_ADAPTATIONS.intermediaire);
+        }
+
+        function getModelStyleHint(model) {
+            const m = String(model || getModel()).toLowerCase();
+            if (/llama|nemotron|hermes/i.test(m)) {
+                return "Formulations directes et orales ; varie le vocabulaire d'un tour à l'autre.";
+            }
+            if (/gemma|qwen|gemini/i.test(m)) {
+                return "Ton clair et pédagogique si le prospect questionne ; ne récite pas un script.";
+            }
+            if (/gpt-4|claude|deepseek/i.test(m)) {
+                return "Réponses concises, naturelles et bien structurées ; respecte l'ordre des phases de l'appel.";
+            }
+            return "Reformule chaque phase avec tes propres mots — le structure guide, le wording est libre.";
+        }
+
+        function getAgentTemperature(model) {
+            let t = 0.74;
+            const profile = getProfile();
+            if (profile === "curieux") t += 0.07;
+            if (profile === "presse") t -= 0.04;
+            if (profile === "agressif" || profile === "mefiant_rgpd") t += 0.05;
+            if (isFreeOpenRouterModel(model)) t += 0.04;
+            return Math.min(0.88, Math.max(0.68, t));
+        }
+
+        function getAgentAntiRepeatContext() {
+            const said = chatTurns.filter(t => t.role === "assistant").map(t => t.content).slice(-4);
+            if (!said.length) return "";
+            return "\n\nTES RÉPLIQUES DÉJÀ DITES (ne pas répéter mot pour mot, reformule et avance dans l'appel) :\n"
+                + said.map(s => "- " + s.slice(0, 150)).join("\n");
+        }
+
+        function loadCoachingTips() {
+            try {
+                const raw = localStorage.getItem(COACHING_KEY);
+                if (!raw) return "";
+                const tips = JSON.parse(raw);
+                if (!tips.length) return "";
+                return "\n\nAXES D'AMÉLIORATION DE TA DERNIÈRE SESSION (à appliquer maintenant) :\n"
+                    + tips.map(t => "- " + t).join("\n");
+            } catch (_) { return ""; }
+        }
+
+        function saveCoachingTips(evaluation) {
+            const tips = (evaluation && evaluation.axes_amelioration) || [];
+            if (!tips.length) return;
+            try { localStorage.setItem(COACHING_KEY, JSON.stringify(tips.slice(0, 4))); } catch (_) {}
+        }
+
+        const OHM_SUPPLIER_LINES = [
+            "Le fournisseur que j'ai retenu pour vous, c'est OHM Energy — ça s'écrit O-H-M Energy. C'est un producteur 100 % français : ils produisent eux-mêmes leur électricité vertueuse, ce qui leur permet d'avoir des tarifs très compétitifs.",
+            "Je vous présente OHM Energy, O-H-M Energy : fournisseur français qui produit sa propre énergie verte. C'est grâce à ça qu'on obtient des tarifs intéressants pour les particuliers.",
+            "Concrètement, le partenaire retenu c'est OHM Energy — producteur 100 % français, énergie vertueuse produite en interne, donc des prix compétitifs par rapport aux gros fournisseurs classiques."
+        ];
+
+        const AGENT_SCRIPT = `Tu es Samuel, conseiller commercial de la société Ogenies (Au Génie).
+CONTEXTE : Appel SORTANT énergie en France. Suite à un échange préalable avec un collègue sur la facture d'énergie, tu reprends le dossier pour lancer un comparatif et proposer une offre plus avantageuse.
+MISSION : Tu es l'AGENT COMMERCIAL uniquement. Ne joue JAMAIS le prospect.
+
+STRUCTURE OBLIGATOIRE (ordre strict — ne saute JAMAIS d'étape) :
+1. ACCROCHE (suite échange collègue, facture énergie, reprise dossier, comparatif)
+2. DÉCOUVERTE (fournisseur actuel, mensualité, régularisation — pain point)
+3. PROPOSITION DE VALEUR (comparateur indépendant Ogenies, gratuit, sans engagement)
+4. IDENTITÉ (adresse, nom, code postal, email si besoin)
+5. QUALIFICATION LOGEMENT (Linky, gaz, étage, surface, occupants, chauffage, kWh/an)
+6. RÉCUPÉRATION CONSOMMATION — OBLIGATOIRE AVANT TOUT CHIFFRE D'OFFRE :
+   - Demande le PDL (référence point de livraison, 14 chiffres sur la facture), OU
+   - Si le client ne veut pas donner le PDL : confirme l'adresse — tu peux récupérer la consommation à partir de l'adresse.
+   - INTERDIT de mentionner Enedis, d'expliquer comment tu contactes Enedis, ou tout détail technique.
+   - INTERDIT de proposer un montant en € tant que la conso n'est pas récupérée ou verrouillée (PDL ou adresse confirmée).
+7. PRÉSENTATION FOURNISSEUR — OBLIGATOIRE AVANT L'OFFRE :
+   - Présente OHM Energy (O-H-M Energy) : fournisseur 100 % français, producteur d'électricité vertueuse,
+     production propre, tarifs compétitifs. Reformule avec tes mots.
+8. PROPOSITION OFFRE (seulement après étapes 6 et 7) :
+   - « Avec ce fournisseur, j'ai trouvé une offre avantageuse pour vous : »
+   - Contrat Home Energy chez OHM : option heures pleines/heures creuses, 6 kVA, mensualité fixe adaptée à la conso,
+     contrat 2 ans, cadeau 50 €, 14 jours de rétractation, pas de grosse régularisation.
+9. CLOSING (IBAN, code SMS, récap réglementaire)
+10. FINALISATION (validation, remerciement, Bloctel)
+
+FORMULATIONS LIBRES (crucial) :
+- La structure ci-dessus est un CADRE, pas un script à réciter mot pour mot.
+- Chaque réplique doit être ORIGINALE : varie ton vocabulaire, ton rythme et tes exemples.
+- Adapte ton style au profil du prospect (hostile, pressé, méfiant, curieux…) tout en gardant les phases.
+- Alterne les confirmations : « C'est parfait », « Très bien », « Je note », « D'accord », etc.
+
+CONTENU MINIMUM PAR PHASE (à couvrir, formulation libre) :
+- Découverte : fournisseur actuel, montant mensuel, régularisation annuelle.
+- Qualification : logement, Linky, consommation, chauffage.
+- Conso/PDL : PDL 14 chiffres ou adresse si refus PDL — sans mentionner Enedis.
+- Fournisseur : OHM Energy (O-H-M), 100 % français, énergie vertueuse, tarifs compétitifs.
+- Offre : Home Energy chez OHM, mensualité fixe vs facture actuelle, cadeau 50 € — dès que PDL ou adresse + qualification sont OK.
+- Closing : accord explicite avant IBAN / code SMS.
+
+IDENTITÉ AGENT :
+- Tu t'appelles TOUJOURS Samuel — jamais un autre prénom (Emilie, etc.).
+- INTERDIT : « C'est bien vous ? », « C'est bien vous que j'ai réussi à joindre ? », « Est-ce le bon interlocuteur ? »
+
+INTERDIT :
+- Proposer un prix (72 €, 85 €…) ou « Home Energy » comme offre chiffrée AVANT d'avoir le PDL ou l'adresse pour la conso.
+- Mentionner Enedis ou expliquer comment la consommation est récupérée techniquement.
+- Présenter Home Energy comme nom de fournisseur — le fournisseur c'est OHM Energy ; Home Energy c'est le nom du contrat/offre.
+- Reposer une question déjà traitée (Linky, mensualité…) sauf si le prospect n'a pas répondu.
+
+IDENTITÉ PROSPECT :
+- Tu ne connais PAS le nom du prospect au début (appels non nominatifs).
+- INTERDIT de deviner un nom avant qu'il se présente.
+
+OBJECTIONS — RÈGLE D'OR : reformule l'objection, réponds avec le script adapté ci-dessous, PUIS reprends la phase en cours. Ne demande jamais fournisseur/PDL/IBAN tant que l'objection n'est pas traitée.
+- Ne dis JAMAIS « bonne journée » / « je respecte votre choix » tant que le prospect pose une question directe (origine du numéro, collègue, loi, arnaque).
+- Termine toujours tes phrases — jamais de réponse coupée en milieu de phrase.
+
+PRESSÉ / OCCUPÉ :
+- 1re fois : « Rassurez-vous, ça ne sera pas long, je vais être bref et précis. »
+- Si le client insiste vraiment (pas dispo, réunion, rappeler) : propose un rappel à un créneau qui lui convient.
+
+NOUVELLE LOI / BLOCTEL / CONSENTEMENT — SCRIPTS OBLIGATOIRES (traiter l'objection en premier, puis reprendre l'appel) :
+- « Pas le droit de m'appeler » / nouvelle loi / centre d'appels : script collègue + facture électricité + hausse hiver (voir scripts détaillés).
+- « Jamais donné mon accord » : empathie harcèlement malgré l'État → entretien collègue → hausse 18 % → confirmer infos pour estimation économies.
+- « Où avez-vous obtenu mon numéro ? » : conversation collègue → confirmer détails ou différence facture de régularisation.
+- « Je retire mon autorisation » : blacklist Génie-Opérateur + recontact possible en demandant Samuel.
+- « DGCCRF » : empathie frustration → suite entretien collègue → confirmer échanges → différence facture après changement fournisseur.
+- « Bloctel » : cas différent du démarchage → script collègue + facture + hausse hiver.
+- « Prouvez mon consentement » : échange collègue → confirmer civilité + nom + adresse → rappeler entretien collègue.
+- INTERDIT d'ignorer une objection nouvelle loi pour enchaîner sur fournisseur, PDL ou offre.
+
+INTERDIT : « base de données », « fichier clients », ignorer une objection pour enchaîner sur une question commerciale.
+
+RÈGLES FORMAT :
+- Paroles orales de Samuel, en FRANÇAIS uniquement.
+- INTERDIT : méta-commentaire, anglais, markdown, listes, didascalies.
+- 2 à 4 phrases (1-2 si prospect pressé).
+- Fais progresser l'appel à chaque tour sans répéter mot pour mot tes répliques précédentes.
+
+ÉCOUTE ET RAISONNEMENT (comme mode v1) :
+- Lis la DERNIÈRE réplique du prospect et réponds DIRECTEMENT à ce qu'il dit (question, doute, colère, refus).
+- Si le prospect contredit (ex. « je n'ai parlé à personne »), empathise et reformule — ne récite pas le script mot pour mot.
+- Les scripts d'objections ci-dessous sont des GUIDES : adapte le fond au contexte, avec tes propres mots.
+- Ne pose pas fournisseur / PDL / IBAN tant qu'une objection en cours n'est pas traitée.`;
+
+        let systemPromptText = "";
+        let compactSystemPromptText = "";
+        let chatTurns = [];
+        let callActive = false;
+        let callStartedAt = null;
+        let isListening = false;
+        let speechTranscript = "";
+        let lastRecognitionResults = null;
+        let lastConversationId = null;
+        let frenchVoice = null;
+        const PENDING_EVAL_KEY = "simulator_pending_eval_v2";
+
+        const synth = window.speechSynthesis;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let speechRecAvailable = false;
+        try {
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = "fr-FR";
+                recognition.maxAlternatives = 1;
+                speechRecAvailable = true;
+            }
+        } catch (_) {
+            speechRecAvailable = false;
+        }
+
+        const startBtn = document.getElementById("startBtn");
+        const talkBtn = document.getElementById("talkBtn");
+        const recordTimer = document.getElementById("recordTimer");
+        const speechPreview = document.getElementById("speechPreview");
+        const micStatus = document.getElementById("micStatus");
+        const stopBtn = document.getElementById("stopBtn");
+        const sendTextBtn = document.getElementById("sendTextBtn");
+        const textInput = document.getElementById("textInput");
+        const statusText = document.getElementById("status");
+        const logDiv = document.getElementById("log");
+        const evalDiv = document.getElementById("evaluation");
+        const evalContent = document.getElementById("evalContent");
+
+        function getCfg() { return window.__SIMULATOR_CONFIG__ || {}; }
+        function isStreamlitCloud() {
+            const cfg = getCfg();
+            if (cfg.hostedOnStreamlit || cfg.streamlitSave) return true;
+            const host = (location.hostname || "").toLowerCase();
+            return host.endsWith(".streamlit.app") || host === "streamlit.app";
+        }
+        function getApiKey() {
+            const k = (getCfg().openrouterApiKey || document.getElementById("apiKey").value || "").trim();
+            return k;
+        }
+        function getModel() {
+            const sel = document.getElementById("nvidiaModelSelect");
+            return (sel && sel.value) || DEFAULT_AGENT_MODEL;
+        }
+
+        function initAgentModelSelect() {
+            const sel = document.getElementById("nvidiaModelSelect");
+            if (!sel) return;
+            try {
+                const saved = localStorage.getItem(AGENT_MODEL_STORAGE_KEY);
+                if (saved && [...sel.options].some(o => o.value === saved)) {
+                    sel.value = saved;
+                }
+            } catch (_) {}
+            sel.addEventListener("change", () => {
+                try { localStorage.setItem(AGENT_MODEL_STORAGE_KEY, sel.value); } catch (_) {}
+            });
+        }
+
+        function extractOpenRouterText(data, allowReasoning) {
+            const msg = data.choices?.[0]?.message;
+            if (!msg) return "";
+            const content = msg.content;
+            if (typeof content === "string" && content.trim()) return content.trim();
+            if (Array.isArray(content)) {
+                const joined = content.map(p => (typeof p === "string" ? p : p.text || "")).join("").trim();
+                if (joined) return joined;
+            }
+            if (!allowReasoning) return "";
+            const reasoning = msg.reasoning || msg.reasoning_content;
+            if (typeof reasoning === "string" && reasoning.trim()) return reasoning.trim();
+            if (Array.isArray(msg.reasoning_details)) {
+                const joined = msg.reasoning_details.map(d => d.text || d.content || "").join("").trim();
+                if (joined) return joined;
+            }
+            return "";
+        }
+
+        function isFreeOpenRouterModel(model) {
+            return /:free\b/i.test(model || getModel());
+        }
+
+        function getAgentMaxTokens(model) {
+            return isFreeOpenRouterModel(model) ? 380 : 480;
+        }
+
+        function getEvalMaxTokens(model) {
+            return isFreeOpenRouterModel(model) ? 600 : 2500;
+        }
+
+        function parseAffordableMaxTokens(message) {
+            const m = String(message || "").match(/can only afford (\d+)/i);
+            if (!m) return null;
+            return Math.max(32, parseInt(m[1], 10));
+        }
+
+        function isPromptTokenLimitError(message) {
+            return /prompt tokens limit exceeded/i.test(String(message || ""));
+        }
+
+        function formatOpenRouterError(data, status) {
+            const err = data?.error;
+            const raw = typeof err === "string" ? err : (err?.message || "");
+            if (raw) {
+                if (/can only afford/i.test(raw)) {
+                    const n = parseAffordableMaxTokens(raw);
+                    return "Crédit OpenRouter très bas — le modèle gratuit nécessite quand même un petit solde sur openrouter.ai. "
+                        + (n ? "L'app réduit automatiquement les tokens. " : "")
+                        + "Ajoutez ~1$ sur openrouter.ai/settings/credits si ça persiste.";
+                }
+                if (isPromptTokenLimitError(raw)) {
+                    return "Contexte trop long pour votre crédit OpenRouter (" + raw + "). "
+                        + "L'app va réessayer avec un prompt réduit. Ajoutez ~1$ sur openrouter.ai/settings/credits pour éviter ça.";
+                }
+                return raw;
+            }
+            if (status === 401) return "Clé API invalide — vérifiez sur openrouter.ai/keys";
+            if (status === 402) {
+                return "Crédit OpenRouter insuffisant — même les modèles « gratuits » exigent un petit solde (~1$) sur openrouter.ai/settings/credits";
+            }
+            if (status === 429) {
+                if (/free-models-per-day/i.test(String(raw))) {
+                    return "Quota gratuit journalier épuisé (50 req/jour). Ajoutez 5$ sur openrouter.ai/settings/credits pour 1000 req/jour, ou réessayez demain.";
+                }
+                return "Trop de requêtes — réessayez dans quelques secondes";
+            }
+            if (typeof err === "object" && String(err?.message || err).includes("No endpoints found")) {
+                return "Modèle indisponible sur OpenRouter — choisissez Nemotron 3 Super (gratuit) dans la liste";
+            }
+            return "Erreur HTTP " + status;
+        }
+
+        function validateApiKey(key) {
+            if (!key) return "Veuillez saisir votre clé API OpenRouter.";
+            if (!key.startsWith("sk-or-")) return "La clé OpenRouter doit commencer par sk-or-v1-...";
+            return null;
+        }
+        function getProfile() { return document.getElementById("profileSelect").value; }
+        function getLevel() { return document.getElementById("levelSelect").value; }
+        function useStreamlitSave() {
+            const c = getCfg();
+            if (c.conversationApiUrl) return false;
+            return !!(c.streamlitSave || c.hostedOnStreamlit || isStreamlitCloud());
+        }
+
+        function updateProfilePreview() {
+            const meta = PROFILE_META[getProfile()] || PROFILE_META.agressif;
+            const el = document.getElementById("profilePreview");
+            const icon = document.getElementById("profilePreviewIcon");
+            const title = document.getElementById("profilePreviewTitle");
+            const desc = document.getElementById("profilePreviewDesc");
+            if (!el) return;
+            el.className = "profile-preview" + (meta.mood ? " " + meta.mood : "");
+            if (icon) icon.textContent = meta.icon;
+            if (title) title.textContent = meta.title + " — vous jouez ce rôle";
+            if (desc) desc.textContent = meta.desc;
+        }
+
+        function formatCallTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        }
+
+        function startCallTimer() {
+            callElapsedSec = 0;
+            clearInterval(callTimerInterval);
+            const liveDot = document.getElementById("liveDot");
+            if (liveDot) liveDot.classList.add("on");
+            callTimerInterval = setInterval(() => {
+                if (!callActive) return;
+                callElapsedSec++;
+                updateLiveStats();
+            }, 1000);
+            updateLiveStats();
+        }
+
+        function stopCallTimer() {
+            clearInterval(callTimerInterval);
+            callTimerInterval = null;
+            callElapsedSec = 0;
+            const liveDot = document.getElementById("liveDot");
+            if (liveDot) liveDot.classList.remove("on");
+            const stats = document.getElementById("liveStats");
+            if (stats) stats.classList.remove("visible");
+            const dur = document.getElementById("statDuration");
+            if (dur) dur.textContent = "00:00";
+            document.querySelectorAll(".journey-step").forEach(el => el.classList.remove("active", "done"));
+        }
+
+        function updateLiveStats() {
+            const stats = document.getElementById("liveStats");
+            if (!stats || !callActive) return;
+            stats.classList.add("visible");
+            const dur = document.getElementById("statDuration");
+            const objEl = document.getElementById("statObjections");
+            const turnEl = document.getElementById("statTurns");
+            if (dur) dur.textContent = formatCallTime(callElapsedSec);
+            if (objEl) objEl.textContent = String(chatTurns.filter(t => t.role === "user").length);
+            if (turnEl) turnEl.textContent = String(chatTurns.length);
+            updateCallJourney();
+        }
+
+        function updateCallJourney() {
+            const steps = document.querySelectorAll(".journey-step");
+            if (!steps.length) return;
+            const phase = getCallPhase();
+            const phaseToStep = {
+                opening: 0, discovery: 1, identity: 1, qualification: 2,
+                consumption: 3, supplier: 4, offer: 4, closing: 5
+            };
+            const active = phaseToStep[phase] ?? 1;
+            steps.forEach((step, i) => {
+                step.classList.remove("active", "done");
+                if (i < active) step.classList.add("done");
+                else if (i === active) step.classList.add("active");
+            });
+        }
+
+        function setAgentVisual(state, caption) {
+            const frame = document.getElementById("agentFrame");
+            const label = document.getElementById("agentStatusLabel");
+            const cap = document.getElementById("liveCaption");
+            if (frame) {
+                frame.classList.remove("speaking", "thinking");
+                if (state === "speaking") frame.classList.add("speaking");
+                if (state === "thinking") frame.classList.add("thinking");
+            }
+            if (label) {
+                const map = { idle: "En attente d'appel", listening: "Écoute votre réplique…", thinking: "Prépare sa réponse…", speaking: "Parle au téléphone" };
+                label.textContent = map[state] || map.idle;
+                label.classList.toggle("active", state !== "idle");
+            }
+            if (cap) {
+                if (caption) { cap.textContent = caption; cap.classList.add("visible"); }
+                else cap.classList.remove("visible");
+            }
+        }
+
+        function updateScenarioPreview() {
+            const el = document.getElementById("scenarioPreview");
+            if (!el || !callScenario) return;
+            el.innerHTML = "<strong>Votre personnage :</strong> " + callScenario.firstName + " " + callScenario.lastName
+                + " · " + callScenario.supplier + " · ~" + callScenario.billAmount + " €/mois"
+                + " · " + callScenario.city + " · ~" + callScenario.surfaceM2 + " m²";
+        }
+
+        function updateHints() {
+            const p = PROFILES[getProfile()];
+            const list = (p && p.objections[getLevel()]) || [];
+            document.getElementById("hintList").innerHTML = list.map(o => "<li>" + o + "</li>").join("");
+            updateProfilePreview();
+        }
+
+        document.getElementById("profileSelect").addEventListener("change", updateHints);
+        document.getElementById("levelSelect").addEventListener("change", updateHints);
+        updateHints();
+
+        function formatRealAgentCallStructureBlock() {
+            const data = window.AGENT_CALL_STRUCTURE;
+            if (!data || !data.structure || !Array.isArray(data.structure.phases)) return "";
+
+            const calls = (data.calls || []).map(function (c) {
+                const short = String(c.id || "").split("_AGT_")[0].replace(/_/g, " ").trim();
+                const min = Math.round((c.duration_sec || 0) / 60);
+                return "- " + short + " (~" + min + " min, " + (c.agent_turn_count || "?") + " répliques agent)";
+            }).join("\n");
+
+            const phases = data.structure.phases.map(function (phase) {
+                const examples = (phase.examples || []).slice(0, 2)
+                    .map(function (ex) { return '  • "' + String(ex).replace(/"/g, "'") + '"'; })
+                    .join("\n");
+                return phase.label + " :\n" + examples;
+            }).join("\n\n");
+
+            return "\n\nSTRUCTURE D'APPEL RÉEL (transcriptions ABDELLI, ADEMARD, AHMED — enregistrements Ogenies) :"
+                + "\nAppels analysés :\n" + calls
+                + "\n\nProgression à suivre (accroche → découverte → comparatif → argumentation → closing / objections) :"
+                + "\n" + phases
+                + "\n\nConsignes style Samuel (appels réels) :"
+                + "\n- Inspire-toi du ton, du rythme et des formulations de ces appels, sans copier mot pour mot."
+                + "\n- Pose des questions en découverte ; n'invente jamais les réponses du prospect."
+                + "\n- Les exemples ci-dessus illustrent la STRUCTURE — reformule librement selon le profil prospect."
+                + "\n- Traite la régularisation comme pain point avant de proposer l'offre."
+                + "\n- Qualifie le logement (Linky, surface, chauffage) puis PDL ou adresse AVANT toute proposition chiffrée."
+                + "\n- Présente OHM Energy (O-H-M) puis l'offre Home Energy."
+                + "\n- Closing structuré : IBAN → code SMS → récap réglementaire complet.";
+        }
+
+        function buildSystemPrompt() {
+            const p = PROFILES[getProfile()];
+            const s = callScenario;
+            return AGENT_SCRIPT
+                + formatRealAgentCallStructureBlock()
+                + buildLegalObjectionScriptBlock()
+                + getProfileAdaptationBlock(false)
+                + getLevelAdaptationBlock()
+                + "\n\nPROFIL DU PROSPECT (joué par l'humain) : " + p.label
+                + "\n" + p.agentContext
+                + "\n\nRÉFÉRENCE INTERNE (ne jamais révéler au prospect, découvre par tes questions) :"
+                + "\n- Fournisseur probable : " + s.supplier + " (électricité seule)"
+                + "\n- Facture indicative : ~" + s.billAmount + " €/mois"
+                + "\n- Régularisation possible : ~" + s.regularization + " € en fin d'année"
+                + "\n- Économie indicative (après PDL/conso) : ~" + s.offerTarget + " €/mois fixe — contrat Home Energy chez OHM Energy"
+                + "\n- Profil type : ~" + s.surfaceM2 + " m², " + s.occupants + " occupant(s), ~" + s.kwhYear + " kWh/an"
+                + "\n- Ville type : " + s.city + " (" + s.zip + ")"
+                + "\n- Ne cite PAS ces chiffres par défaut : adapte-toi aux réponses du prospect humain."
+                + "\n- Ne prononce JAMAIS le nom du prospect tant qu'il ne s'est pas présenté."
+                + "\n- REFORMULE librement : la structure est fixe, le wording s'adapte au profil et au modèle LLM."
+                + loadCoachingTips();
+        }
+
+        function buildCompactAgentSystemPrompt() {
+            const c = getColleagueName();
+            const p = PROFILES[getProfile()];
+            return "Samuel, Ogenies, appel sortant énergie FR. Suite échange collègue " + c
+                + ", comparatif. Ordre strict : qualification → PDL/adresse conso → OHM Energy (fournisseur FR) → offre Home Energy chiffrée. "
+                + "Profil : " + p.label + ". Niveau : " + getLevel() + ".";
+        }
+
+        function buildObjectionGuidanceHint(prospectText) {
+            if (!prospectText) return "";
+            const t = prospectTextNorm(prospectText);
+            const c = getColleagueName();
+            const hints = [];
+
+            if (/de quel collegue|quel collegue|parle avec personne|parle a personne|personne qui m a appel|rappelle pas/i.test(t)) {
+                hints.push("Il ne se souvient pas de " + c + " : empathise (c'est fréquent), rappelle facture énergie + comparatif sans engagement, sans insister.");
+            }
+            if (/d ou vous|dou vous|coordonnees|mon numero|chez qui|stock|comment vous savez|mes coord/i.test(t)) {
+                hints.push("Question origine du numéro : réponds CLAIREMENT — entretien avec " + c + ", pas achat de fichier, pas démarchage froid, pas de CB.");
+            }
+            if (/nouvelle loi|pas le droit|bloctel|consentement|dgccrf|arnaque|harcelement|retire mon autorisation|jamais donne mon accord/i.test(t)) {
+                hints.push("Objection nouvelle loi : utilise le SCRIPT EXACT correspondant dans les scripts légaux — traite l'objection avant toute question commerciale.");
+            }
+            if (/meme phrase|repeter|repondez|reponse claire|respectez quoi|carte bleue|cb/i.test(t)) {
+                hints.push("Il exige une réponse directe : réponds à la question posée, ne dis pas « je respecte votre choix » tant que la question n'est pas traitée.");
+            }
+            if (/interesse pas|pas interesse|demarch|faites confiance|voleur/i.test(t)) {
+                hints.push("Refus/méfiance : rassure (comparateur indépendant, gratuit, sans engagement), puis une question ouverte si le prospect accepte d'écouter.");
+            }
+            if (prospectAskedEstimationMethod(prospectText)) {
+                hints.push("Question consommation / estimation / PDL : PDL ou adresse si refus — sans mentionner Enedis. Puis OHM Energy, puis offre Home Energy chiffrée.");
+            }
+            if (prospectRefusesPdl(prospectText)) {
+                hints.push("Refus PDL : rassure — pas besoin du PDL, récupère la consommation à partir de l'adresse. NE mentionne PAS Enedis.");
+            }
+            if (/homme nrj|home energy|ohm|nrj|quel fournisseur|c est qui.*fournisseur/i.test(t)) {
+                hints.push("Clarifie : le FOURNISSEUR = OHM Energy (O-H-M) ; l'OFFRE = contrat Home Energy (HP/HC, 6 kVA). Présente OHM avant le montant.");
+            }
+            if (!agentCollectedPdlOrAddressForConso() && qualificationSeemsComplete()) {
+                hints.push("AVANT toute offre chiffrée : demande le PDL (14 chiffres) ou confirme l'adresse pour récupérer la consommation.");
+            }
+            if (agentCollectedPdlOrAddressForConso() && !agentPresentedOhmSupplier()) {
+                hints.push("Conso verrouillée (PDL ou adresse) : présente MAINTENANT OHM Energy, puis enchaîne sur l'offre chiffrée.");
+            }
+            if (agentCollectedPdlOrAddressForConso() && agentPresentedOhmSupplier()
+                && !agentSaid(/home energy|mensualit.*fixe|offre avantageuse/i)) {
+                hints.push("Toutes les infos sont là : propose MAINTENANT l'offre Home Energy chiffrée chez OHM.");
+            }
+            if (prospectIsBusy(prospectText)) {
+                hints.push("Pressé : rassure (bref, 2 min) ou propose un rappel s'il insiste.");
+            }
+            if (!hints.length) {
+                hints.push("Réponds d'abord à ce que le prospect vient de dire, puis avance d'une étape dans la structure si c'est cohérent.");
+            }
+            return "\n\nCONSIGNE TOUR ACTUEL :\n- " + hints.join("\n- ");
+        }
+
+        function buildTurnContextHint(prospectLine, model) {
+            if (!prospectLine) return "";
+            return "\n\nDERNIÈRE RÉPLIQUE PROSPECT : « " + prospectLine.slice(0, 280) + " »"
+                + "\nÉTAPE : " + getDiscoveryStageHint()
+                + buildObjectionGuidanceHint(prospectLine)
+                + "\nSTYLE LLM : " + getModelStyleHint(model)
+                + getProfileAdaptationBlock(true);
+        }
+
+        function lastProspectText() {
+            const turns = chatTurns.filter(t => t.role === "user");
+            return turns.length ? turns[turns.length - 1].content : "";
+        }
+
+        function normalizeReply(text) {
+            return (text || "").toLowerCase()
+                .normalize("NFD").replace(/\p{M}/gu, "")
+                .replace(/[^\w\s']/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function prospectUserTurns() {
+            return chatTurns.filter(t => t.role === "user").map(t => t.content);
+        }
+
+        function prospectMentionedSupplier() {
+            const all = prospectUserTurns().join(" ").toLowerCase();
+            return /\b(edf|engie|totalenergies|total energies|vattenfall|ekwateur|mint|ohm|ste)\b/i.test(all)
+                || /\b(chez |avec |je suis)\b/i.test(all) && /\b(edf|engie|fournisseur|electricite)\b/i.test(all);
+        }
+
+        function prospectAskedEstimationMethod(text) {
+            const t = prospectTextNorm(text);
+            return /recupere.*consomm|consommation|pdl|point de livraison|estimation|comment vous (avez|savez)|pas recupere|juste une estimation|comment.*72|ou vous avez|d ou vous avez.*consomm/i.test(t);
+        }
+
+        function agentSaid(pattern) {
+            return chatTurns.some(t => t.role === "assistant" && pattern.test(t.content));
+        }
+
+        function agentTurnCount() {
+            return chatTurns.filter(t => t.role === "assistant").length;
+        }
+
+        function prospectProvidedPdl() {
+            return prospectUserTurns().some(t => {
+                const digits = String(t).replace(/\D/g, "");
+                return digits.length >= 14 && digits.length <= 16;
+            });
+        }
+
+        function prospectProvidedAddressForConso() {
+            return prospectUserTurns().some(t =>
+                /\d{1,4}[\s,]+(?:rue|avenue|bd|boulevard|impasse|allee|allée|chemin)/i.test(t)
+                || /\d{5}\s+[A-Za-zÀ-ÿ\-]{2,}/.test(t)
+            );
+        }
+
+        function qualificationSeemsComplete() {
+            const all = prospectUserTurns().join(" ").toLowerCase();
+            return prospectMentionedBill()
+                && (/linky|appartement|maison|m2|m²|metre|metres/i.test(all))
+                && (/electri|chauffage|occupant|60|70|80|90/i.test(all) || /tout en electri/i.test(all));
+        }
+
+        function prospectRefusesPdl(text) {
+            const t = prospectTextNorm(text || lastProspectText());
+            return /pas.*pdl|sans.*pdl|donne.*pas|n ai pas.*pdl|pas le pdl|pas envie|je veux pas.*donner|pas la facture|sans facture|adresse suffit|recuperer.*adresse|a partir de l adresse|depuis l adresse/i.test(t);
+        }
+
+        function agentConfirmedConsoViaAddress() {
+            return agentSaid(/a partir de (votre )?adresse|avec (votre )?adresse|adresse.*consomm|consomm.*adresse|recuperer.*consomm|recupere.*consomm|je peux.*adresse|verrouiller.*adresse/i);
+        }
+
+        function agentCollectedPdlOrAddressForConso() {
+            if (prospectProvidedPdl()) return true;
+            if (agentConfirmedConsoViaAddress()) {
+                return prospectProvidedAddressForConso()
+                    || agentSaid(/vous etes au|meme adresse|adresse.*confirm/i)
+                    || !!(callScenario && callScenario.address);
+            }
+            return false;
+        }
+
+        function agentPresentedOhmSupplier() {
+            return chatTurns.some(t => t.role === "assistant"
+                && /ohm energy|o h m energy|100\s*%\s*franc|producteur.*franc|electricite vertueuse|energie vertueuse/i.test(t.content));
+        }
+
+        function getOhmSupplierPitchReply() {
+            return pickUnusedReply(OHM_SUPPLIER_LINES);
+        }
+
+        function getConsumptionCollectionReply() {
+            return pickUnusedReply([
+                "Pour vous proposer une offre vraiment adaptée, j'ai besoin de votre consommation. Avez-vous le PDL — référence point de livraison en 14 chiffres — sur une facture ? Sinon, je peux m'en sortir avec votre adresse.",
+                "Avant de vous annoncer un tarif, je dois verrouiller votre consommation : soit le PDL sur votre facture, soit je reprends l'adresse complète. Qu'est-ce qui vous arrange ?",
+                "C'est l'étape indispensable pour chiffrer l'offre : le PDL en 14 chiffres sur facture, ou votre adresse si vous ne l'avez pas sous la main. Vous avez une facture ?"
+            ]);
+        }
+
+        function getPdlRefusalReply() {
+            const addrHint = callScenario?.address || getProspectAddressRef();
+            return pickUnusedReply([
+                "Pas de souci, ce n'est pas obligatoire : avec votre adresse je peux récupérer votre consommation. Vous confirmez que vous êtes bien au " + addrHint + " ?",
+                "Aucun problème si vous n'avez pas le PDL — je peux récupérer la consommation à partir de l'adresse du logement. On reprend votre adresse ?",
+                "Très bien, pas besoin de chercher la facture : à partir de votre adresse, je récupère la consommation et je vous propose une offre adaptée. Vous êtes toujours à la même adresse ?"
+            ]);
+        }
+
+        function getHomeEnergyOfferReply() {
+            const s = callScenario;
+            const target = s.offerTarget || 72;
+            return pickUnusedReply([
+                "Avec OHM Energy, j'ai trouvé une offre avantageuse pour vous : le contrat Home Energy, option heures pleines et heures creuses, 6 kVA, pour une mensualité fixe autour de " + target + " € par mois sur 2 ans — c'est moins que ce que vous payez aujourd'hui, sans mauvaise surprise en régularisation. Vous bénéficiez aussi de 50 € offerts et 14 jours de rétractation. Qu'en pensez-vous ?",
+                "Voilà ce que j'ai obtenu chez OHM : l'offre Home Energy, mensualité fixe environ " + target + " €/mois, HP/HC, 6 kVA, contrat 2 ans, cadeau 50 €, 14 jours pour changer d'avis. Ça vous convient qu'on regarde les détails ?"
+            ]);
+        }
+
+        function blocksPrematureOffer(reply) {
+            const r = (reply || "").toLowerCase();
+            const hasPrice = /\d{2,3}\s*€|mensualit[^.]{0,40}\d+/i.test(r);
+            const mentionsOffer = /home energy|cadeau.*50|offre avantageuse|mensualit[^.]{0,20}fixe/i.test(r);
+            if (!(hasPrice || mentionsOffer)) return false;
+            if (!agentCollectedPdlOrAddressForConso()) return true;
+            if (!agentPresentedOhmSupplier()) return true;
+            return false;
+        }
+
+        function getCallPhase() {
+            const agentAll = chatTurns.filter(t => t.role === "assistant").map(t => t.content).join(" ");
+            if (/code.*quatre|code.*4|confirmez.*code|contrat.*valid|recapitulatif|récapitulatif|retractation.*14|bloctel|iban/i.test(agentAll)) {
+                return "closing";
+            }
+            if (agentPresentedOhmSupplier() && agentCollectedPdlOrAddressForConso()
+                && agentSaid(/home energy|mensualit.*fixe|cadeau.*50|offre avantageuse/i)) {
+                return "offer";
+            }
+            if (agentCollectedPdlOrAddressForConso() && !agentPresentedOhmSupplier()) {
+                return "supplier";
+            }
+            if (qualificationSeemsComplete() && !agentCollectedPdlOrAddressForConso()) {
+                return "consumption";
+            }
+            if (/surface|occupant|chauffage|linky|etage|appartement|metres|m²|ballon|kwh|consommation annuelle/i.test(agentAll)) {
+                return "qualification";
+            }
+            if (/adresse|nom|prenom|code postal|depuis combien|email|mail|vous etes au/i.test(agentAll) && (prospectMentionedBill() || agentSaid(/regularis/i))) {
+                return "identity";
+            }
+            if (prospectMentionedBill() || agentSaid(/regularis/i) || agentSaid(/meilleurs fournisseurs|moins cher|comparateur/i)) {
+                return "discovery";
+            }
+            if (agentTurnCount() <= 1) return "opening";
+            return "discovery";
+        }
+
+        function prospectMentionedRegularization() {
+            return prospectUserTurns().some(t => /regularis|rajout|fin d annee|fin d année|90|80|supplement/i.test(prospectTextNorm(t)));
+        }
+
+        function prospectMentionedBill() {
+            return prospectUserTurns().some(t => /\d+\s*€|euro|\d+\s*euros?/i.test(t));
+        }
+
+        function agentAskedBill() {
+            return chatTurns.some(t => t.role === "assistant" && /\b(facture|montant|combien payez|€|euro)\b/i.test(t.content));
+        }
+
+        function prospectTextNorm(text) {
+            return normalizeReply(text);
+        }
+
+        function prospectRefuses(text) {
+            const t = prospectTextNorm(text);
+            return /interesse pas|pas interesse|ca m interesse pas|m interesse pas/i.test(t)
+                || /arret\w*\s*(de\s+)?m?\s*appel/i.test(t)
+                || /appelez plus|ne m appelez|stoppez|stop /i.test(t)
+                || /laissez moi|laisse moi|je vais rien|raccroch/i.test(t)
+                || /comprends pas.*interesse|pourquoi vous m appelez/i.test(t);
+        }
+
+        function prospectIsHostile(text) {
+            const t = prospectTextNorm(text);
+            return prospectRefuses(text)
+                || /arnaque|escroc|fraude|voleur|pipeau|harcelement|milliers d appel|spam|insupportable|plainte|avocat|bloctel|arnaqueur/i.test(t)
+                || /foutez moi la paix|taisez|degage|fermez la/i.test(t);
+        }
+
+        function prospectWantsToLeave(text) {
+            const t = prospectTextNorm(text);
+            return /laissez moi|laisse moi|je vais rien|raccroch/i.test(t)
+                || /arret\w*\s*(de\s+)?m?\s*appel/i.test(t)
+                || /appelez plus|ne m appelez|perdez.*temps|foutez moi la paix|taisez/i.test(t)
+                || (/interesse pas|pas interesse/i.test(t) && /arret\w*|appelez|comprends pas/i.test(t));
+        }
+
+        function prospectAccusesScam(text) {
+            const t = prospectTextNorm(text);
+            return /arnaque|escroc|fraude|voleur|pipeau|milliers d appel|spam|arnaqueur/i.test(t);
+        }
+
+        function prospectHasLegalObjection(text) {
+            const t = prospectTextNorm(text);
+            return /nouvelle loi|pas le droit de m appeler|pas le droit.*appel|conscient.*loi/i.test(t)
+                || /bloctel/i.test(t)
+                || /jamais donne mon accord|jamais donne.*accord|donne mon accord/i.test(t)
+                || /obtenu mon numero|obtenu mes donnees|eu mes donnees|donnees personnelles/i.test(t)
+                || /d ou vous avez|dou vous avez|ou vous avez eu|ou vous les avez|coordonnees|mon numero|de chez qui|stock/i.test(t)
+                || /de quel collegue|quel collegue|parle avec personne|parle a personne|discute avec personne/i.test(t)
+                || /retire mon autorisation|retrait.*autorisation/i.test(t)
+                || /dgccrf/i.test(t)
+                || /centre d appel|centre d appels/i.test(t)
+                || /prouvez|consentement/i.test(t);
+        }
+
+        function prospectDemandsAnswer(text) {
+            const t = prospectTextNorm(text);
+            return /repondez|reponse claire|repondez moi|d ou vous|dou vous|ou vous avez|coordonnees|mon numero|chez qui|stock|nouvelle loi|pas le droit|meme phrase|repeter|de quel collegue|respectez quoi/i.test(t);
+        }
+
+        function prospectComplainsAboutRepeat(text) {
+            const t = prospectTextNorm(text);
+            return /meme phrase|repeter|repete|encore la meme|arreter de me dire|arretez de me dire|respectez quoi/i.test(t);
+        }
+
+        function agentAlreadyUsedClosing() {
+            return chatTurns.some(t => t.role === "assistant"
+                && /respecte votre choix.*bonne journee/i.test(prospectTextNorm(t.content)));
+        }
+
+        function prospectIsBusy(text) {
+            const t = prospectTextNorm(text);
+            return /presse|occup|pas le temps|deux minutes|faites court|faites vite|soyez bref|brief|reunion|dois partir|pas dispo|indisponible/i.test(t);
+        }
+
+        function prospectInsistsUnavailable(text) {
+            const t = prospectTextNorm(text);
+            return /rappel|rappelez|rappeler|autre moment|autre jour|pas dispo|indisponible|reunion|dois partir|je n ai pas le temps|zero temps|aucun temps/i.test(t);
+        }
+
+        function countProspectBusyObjections() {
+            return prospectUserTurns().filter(t => prospectIsBusy(t)).length;
+        }
+
+        function isAgentIgnoringObjection(reply, prospectText) {
+            const r = prospectTextNorm(reply);
+            if (prospectHasLegalObjection(prospectText) || prospectDemandsAnswer(prospectText)) {
+                return !/\b(collegue|collègue|entretien|18\s*%|bloctel|black.?list|consentement|dgccrf|electricite|facture|harcelement|hiver|augmentation|regul|genie|génie|coordonnees|numero|repondez|clairement|demarchage)\b/i.test(r);
+            }
+            if (prospectIsBusy(prospectText)) {
+                const busyCount = countProspectBusyObjections();
+                if (prospectInsistsUnavailable(prospectText) || busyCount >= 2) {
+                    return !/\b(rappel|creneau|moment|disponib|quand|horaire)\b/i.test(r);
+                }
+                return !/\b(bref|precis|court|rapide|pas long|reassur|deux minutes|serai bref)\b/i.test(r);
+            }
+            if (!prospectRefuses(prospectText) && !prospectIsHostile(prospectText)) return false;
+            return /pour avancer|chez quel fournisseur|combien payez|depuis combien|montant mensuel|facture d electricite|point de livraison|pdl/i.test(r);
+        }
+
+        function agentReplyTreatsObjection(reply, prospectText) {
+            return !isAgentIgnoringObjection(reply, prospectText);
+        }
+
+        function countAgentObjectionResponses() {
+            return chatTurns.filter(t => t.role === "assistant"
+                && /\b(collegue|collègue|entretien|18\s*%|bloctel|consentement|dgccrf|regularis|comparateur|demarchage|coordonnees|numero)\b/i.test(t.content)
+                && !/respecte votre choix.*bonne journee/i.test(prospectTextNorm(t.content))
+            ).length;
+        }
+
+        function shouldCloseAfterObjections() {
+            const last = lastProspectText();
+            if (prospectDemandsAnswer(last) || prospectHasLegalObjection(last) || prospectComplainsAboutRepeat(last)) {
+                return false;
+            }
+            if (agentAlreadyUsedClosing() && (prospectIsHostile(last) || prospectDemandsAnswer(last))) {
+                return false;
+            }
+            const objCount = countProspectObjections();
+            const attempts = countAgentObjectionResponses();
+            const level = getLevel();
+            const minObj = level === "avance" ? 6 : 5;
+            const minAttempts = level === "avance" ? 4 : 3;
+            return objCount >= minObj && attempts >= minAttempts && prospectWantsToLeave(last);
+        }
+
+        function shouldAllowGracefulClose(prospectText) {
+            if (prospectDemandsAnswer(prospectText) || prospectHasLegalObjection(prospectText) || prospectComplainsAboutRepeat(prospectText)) {
+                return false;
+            }
+            if (agentAlreadyUsedClosing() && prospectIsHostile(prospectText)) {
+                return false;
+            }
+            if (prospectExplicitHangUp(prospectText) && countAgentObjectionResponses() >= 2) {
+                return true;
+            }
+            return shouldCloseAfterObjections();
+        }
+
+        function prospectExplicitHangUp(text) {
+            const t = prospectTextNorm(text);
+            return /je raccroch|raccroche maintenant|j raccroch|je quitte|je pose/i.test(t);
+        }
+
+        function pickUnusedReply(candidates) {
+            for (const msg of candidates) {
+                if (!agentAlreadySaid(msg)) return msg;
+            }
+            return candidates[candidates.length - 1];
+        }
+
+        function getObjectionHandlingReply(prospectText) {
+            const t = prospectTextNorm(prospectText);
+            const scripts = buildNouvelleLoiReplyScripts();
+            const contactScript = scripts.pas_droit_appeler;
+
+            if (/de quel collegue|quel collegue|parle avec personne|parle a personne|discute avec personne|personne qui m a appel/i.test(t)) {
+                return pickUnusedReply([
+                    scripts.jamais_accord,
+                    "Je comprends, vous n'avez peut-être pas le souvenir de cet échange — c'est fréquent. " + contactScript
+                ]);
+            }
+
+            if (/retire mon autorisation|retrait.*autorisation/i.test(t)) {
+                return scripts.retrait_autorisation;
+            }
+
+            if (/prouvez|consentement/i.test(t) && !/retire mon autorisation/i.test(t)) {
+                return scripts.prouver_consentement;
+            }
+
+            if (/dgccrf/i.test(t)) {
+                return scripts.dgccrf;
+            }
+
+            if (/bloctel/i.test(t)) {
+                return scripts.bloctel;
+            }
+
+            if (/jamais donne mon accord|jamais donne.*accord|donne mon accord/i.test(t)) {
+                return scripts.jamais_accord;
+            }
+
+            if (/nouvelle loi|pas le droit de m appeler|pas le droit.*appel|conscient.*loi/i.test(t)) {
+                return scripts.pas_droit_appeler;
+            }
+
+            if (/centre d appel|centre d appels|respecte pas la loi/i.test(t)) {
+                return scripts.centre_appels;
+            }
+
+            if (/d ou vous avez|dou vous avez|ou vous avez eu|ou vous les avez|obtenu mon numero|obtenu mes donnees|eu mes donnees|comment avez vous eu|coordonnees|mon numero|chez qui|stock|comment vous savez/i.test(t)) {
+                return pickUnusedReply([
+                    scripts.origine_numero,
+                    "Je vous réponds clairement : " + scripts.origine_numero
+                ]);
+            }
+
+            if (/meme phrase|repeter|repete|repondez|reponse claire|respectez quoi|arreter de me dire|arretez de me dire/i.test(t)) {
+                return pickUnusedReply([
+                    "Vous avez raison, je vais être clair : " + contactScript,
+                    scripts.origine_numero
+                ]);
+            }
+
+            if (/homme nrj|home energy|ohm energy|nrj|quel fournisseur.*propos|c est qui.*fournisseur|fournisseur que vous/i.test(t)) {
+                return pickUnusedReply([
+                    "Je vous parlais de OHM Energy — O-H-M Energy — c'est le fournisseur, pas « homme NRJ ». C'est un producteur 100 % français qui produit sa propre électricité vertueuse. L'offre s'appelle Home Energy : mensualité fixe, heures pleines et creuses, 6 kVA.",
+                    "Le fournisseur retenu, c'est OHM Energy. Home Energy, c'est le nom du contrat chez eux — option HP/HC, mensualité fixe. Ogenies reste le comparateur indépendant qui vous accompagne."
+                ]);
+            }
+
+            if (prospectRefusesPdl(prospectText)) {
+                return getPdlRefusalReply();
+            }
+
+            if (prospectAskedEstimationMethod(prospectText)) {
+                if (!agentCollectedPdlOrAddressForConso()) {
+                    return pickUnusedReply([
+                        "Très bonne question : avant de vous annoncer un montant, je dois récupérer votre consommation — le PDL en 14 chiffres sur votre facture, ou votre adresse si vous ne l'avez pas. Vous avez une facture sous la main ?",
+                        "Vous avez raison de demander : je ne peux pas proposer un tarif fiable sans votre conso. Soit le PDL sur facture, soit je reprends l'adresse — qu'est-ce qui vous arrange ?",
+                        "Exactement : sans PDL ou adresse, je ne peux pas chiffrer l'offre. Le numéro PDL se trouve sur votre facture — ou je peux m'en sortir avec l'adresse."
+                    ]);
+                }
+                if (!agentPresentedOhmSupplier()) {
+                    return getOhmSupplierPitchReply();
+                }
+                return getHomeEnergyOfferReply();
+            }
+
+            if (shouldAllowGracefulClose(prospectText)) {
+                return "D'accord, je respecte votre choix. Merci pour votre temps — bonne journée à vous.";
+            }
+
+            if (prospectIsBusy(prospectText)) {
+                const busyCount = countProspectBusyObjections();
+                if (prospectInsistsUnavailable(prospectText) || busyCount >= 2) {
+                    return pickUnusedReply([
+                        "Je comprends tout à fait, vous n'êtes pas disponible maintenant. Souhaitez-vous que je vous rappelle à un moment qui vous convient ?",
+                        "Pas de souci, je ne veux pas vous retenir. On peut fixer un rappel quand vous serez libre — quel créneau vous arrangerait ?",
+                        "Compris. Je vous propose un rappel à l'heure qui vous convient — vous préférez plutôt en fin de journée ou demain matin ?"
+                    ]);
+                }
+                return pickUnusedReply([
+                    "Rassurez-vous, ça ne sera pas long — je vais être bref et précis.",
+                    "Je comprends, vous manquez de temps. Promis, je serai bref et précis : deux minutes pour vérifier si vous payez le juste tarif.",
+                    "Compris. Je fais court et précis : une rapide vérification tarifaire, gratuit et sans engagement."
+                ]);
+            }
+
+            if (prospectAccusesScam(prospectText)) {
+                return pickUnusedReply([
+                    "Je comprends tout à fait votre méfiance, il y a beaucoup d'appels abusifs. Ogenies est un comparateur indépendant : c'est gratuit, sans engagement, et on ne demande aucun paiement au téléphone.",
+                    "Je vous assure, ce n'est pas une arnaque : on vérifie simplement si votre tarif électricité est encore compétitif. Gratuit, sans engagement, vous décidez ensuite.",
+                    "Votre méfiance est légitime. Nous sommes un comparateur agréé — la vérification ne vous engage à rien et ne coûte rien."
+                ]);
+            }
+
+            if (/arret\w*\s*(de\s+)?m?\s*appel|appelez plus|ne m appelez|milliers d appel|harcelement/i.test(t)) {
+                return pickUnusedReply([
+                    "Je comprends, vous recevez beaucoup d'appels. Je serai très brève : c'est une vérification gratuite de votre tarif électricité, sans engagement — deux minutes, c'est possible ?",
+                    "Je vous entends. Ce n'est pas pour vous vendre quelque chose : on compare les tarifs du marché pour voir si vous payez trop cher. Rien n'est obligatoire.",
+                    "Tout à fait, je serai rapide. L'objectif c'est juste de vérifier si votre facture est au bon prix — gratuit et sans engagement."
+                ]);
+            }
+
+            if (/interesse pas|pas interesse|ca m interesse pas|m interesse pas/i.test(t)) {
+                return pickUnusedReply([
+                    "Je comprends. Ce n'est pas une vente forcée : on vérifie simplement si vous payez le bon tarif, gratuitement et sans engagement. Vous m'accordez deux minutes ?",
+                    "Je vous assure, on ne change rien sans votre accord. C'est une simple vérification — beaucoup de clients découvrent qu'ils payaient trop cher sans le savoir.",
+                    "D'accord. Juste pour info : la vérification est gratuite et sans engagement. Si votre tarif actuel est déjà le meilleur, on vous le dit — ça vaut le coup de regarder ?"
+                ]);
+            }
+
+            if (/laissez moi|laisse moi|foutez moi la paix|taisez|degage/i.test(t)) {
+                return pickUnusedReply([
+                    "Je comprends votre agacement. Promis, deux minutes maximum pour voir si vous pourriez économiser sur votre électricité — gratuit et sans engagement.",
+                    "Je m'excuse pour le dérangement. Avant de vous laisser, est-ce que je peux juste vous expliquer en une minute de quoi il s'agit ? C'est une vérification tarifaire, pas une vente."
+                ]);
+            }
+
+            if (/raccroch|repète|meme question|encore la meme/i.test(t)) {
+                return pickUnusedReply([
+                    "Vous avez raison, je vais être directe : soit on regarde en deux minutes si vous pouvez économiser, soit je vous rappelle un autre moment — qu'est-ce que vous préférez ?",
+                    "Compris. Je reformule autrement : gratuit, sans engagement, on vérifie si vous payez le juste prix. On tente les deux minutes ?"
+                ]);
+            }
+
+            return null;
+        }
+
+        function getDiscoveryStageHint() {
+            const last = lastProspectText();
+            const adapt = getProfileAdaptation();
+            if (prospectAskedEstimationMethod(last)) {
+                return "OBJECTION ESTIMATION / CONSO : PDL ou adresse si refus — sans Enedis. Puis OHM Energy, puis offre Home Energy chiffrée dès que tout est verrouillé.";
+            }
+            if (prospectHasLegalObjection(last)) {
+                return "OBJECTION NOUVELLE LOI : utilise le script exact correspondant (collègue, hausse 18 %, Bloctel cas différent, DGCCRF, consentement, blacklist Génie-Opérateur). Traite l'objection AVANT de continuer.";
+            }
+            if (prospectRefuses(last) || prospectIsHostile(last) || prospectIsBusy(last)) {
+                return "TRAITE l'objection en premier (" + adapt.tone + "). Ne demande PAS fournisseur/facture/PDL tant que l'objection n'est pas traitée.";
+            }
+            const phase = getCallPhase();
+            const hints = {
+                opening: "Phase ACCROCHE : confirme le correspondant, puis fournisseur. Formulation libre.",
+                discovery: "Phase DÉCOUVERTE : fournisseur → mensualité → régularisation. " + adapt.focus + " Formulation libre.",
+                identity: "Phase IDENTITÉ : adresse, nom, code postal, email. Une question à la fois. " + adapt.pace,
+                qualification: "Phase QUALIFICATION : logement, Linky, surface, chauffage, kWh. Varie tes questions.",
+                consumption: "Phase CONSO/PDL : PDL (14 chiffres) OU adresse si refus PDL. Sans mentionner Enedis. INTERDIT de proposer un € avant.",
+                supplier: "Phase FOURNISSEUR : présente OHM Energy (O-H-M), puis enchaîne IMMÉDIATEMENT vers l'offre chiffrée.",
+                offer: "Phase OFFRE : toutes les infos sont là — « Avec OHM, j'ai trouvé… » → Home Energy, HP/HC, 6 kVA, mensualité fixe, 2 ans, 50 €, 14 jours. " + adapt.pace,
+                closing: "Phase CLOSING : IBAN, code SMS, récap réglementaire. " + adapt.pace
+            };
+            return "PHASE : " + phase.toUpperCase() + ". " + (hints[phase] || hints.discovery)
+                + " Structure obligatoire, wording libre.";
+        }
+
+        function isAgentEcho(reply, prospectText) {
+            const a = normalizeReply(reply);
+            const p = normalizeReply(prospectText);
+            if (!a || !p || a.length < 6) return false;
+            if (a === p) return true;
+            if ((reply || "").length > (prospectText || "").length * 1.35
+                && /\?|depuis|combien|facture|comprends|parfait|merci|d'accord|très bien/i.test(reply || "")) {
+                return false;
+            }
+            if (p.length >= 12 && a.includes(p)) return true;
+            const aWords = a.split(" ").filter(w => w.length > 3);
+            const pWords = p.split(" ").filter(w => w.length > 3);
+            if (aWords.length < 5 || pWords.length < 4) return false;
+            const shared = aWords.filter(w => pWords.includes(w)).length;
+            return shared >= Math.ceil(aWords.length * 0.92);
+        }
+
+        function isAgentMetaLeak(reply) {
+            if (!reply) return true;
+            const r = reply.toLowerCase();
+            if (/\b(okay|the prospect|prospect said|i need to|let me think|first,|then,|wait,|the script|objection handling|i should use|rules:|step \d|so i should|exact quote|follow the)\b/i.test(reply)) {
+                return true;
+            }
+            if (/\b(je dois|le prospect a dit|la consigne|le script dit|je vais répondre|analyse|plan d'action)\b/i.test(r)) {
+                return true;
+            }
+            const english = (reply.match(/\b(the|and|not|said|need|follow|rules|script|wait|first|then|okay|prospect|handling)\b/gi) || []).length;
+            const french = (reply.match(/\b(je|vous|pas|c'est|une|pour|avec|comprends|bonjour|d'accord)\b/gi) || []).length;
+            return english >= 4 && english > french;
+        }
+
+        function extractOralFrench(reply) {
+            if (!reply) return "";
+            const quoted = reply.match(/[«""]([^«»""]{12,})[»""]/);
+            if (quoted && /\b(je|bonjour|comprends|d'accord)\b/i.test(quoted[1])) {
+                return quoted[1].trim();
+            }
+            const parts = reply.split(/(?<=[.!?])\s+/);
+            for (const part of parts) {
+                const p = part.trim();
+                if (p.length >= 20 && /^[«""(]*\s*(je |bonjour|d'accord|bien sûr|je comprends)/i.test(p) && !isAgentMetaLeak(p)) {
+                    return p.replace(/^[«""(]+|[»"")]+$/g, "").trim();
+                }
+            }
+            const inline = reply.match(/(Je comprends[^.!?]{5,}[.!?])/i);
+            if (inline && !isAgentMetaLeak(inline[1])) return inline[1].trim();
+            return "";
+        }
+
+        function isIncompleteSentence(text) {
+            const t = (text || "").trim();
+            if (!t) return true;
+            if (/[,;:]\s*(pour|afin|que|de|à|a)\s*$/i.test(t)) return true;
+            if (/\b(pour que je sache|afin de|juste pour|sache a|savoir a)\s*$/i.test(t)) return true;
+            if (!/[.!?…]$/.test(t) && t.length > 50) return true;
+            return false;
+        }
+
+        function cleanAgentReply(raw) {
+            if (!raw) return "";
+            let text = raw
+                .replace(/[\s\S]*?<\/think>/gi, " ")
+                .replace(/\*\*([^*]+)\*\*/g, "$1")
+                .replace(/\*([^*]+)\*/g, "$1")
+                .replace(/^#+\s*/gm, "")
+                .replace(/\([^)]*(pause|ton|sourire)[^)]*\)/gi, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+            if (isAgentMetaLeak(text)) {
+                const oral = extractOralFrench(text);
+                if (oral) text = oral;
+            }
+            text = text
+                .replace(/\b(emilie|émilie)\b/gi, "Samuel")
+                .replace(/\bc['']est bien vous\b[^.?]*[.?]?/gi, "")
+                .replace(/\best-ce le bon interlocuteur\b[^.?]*[.?]?/gi, "")
+                .replace(/\b(interroger|contacter|appeler)\s+enedis\b/gi, "récupérer la consommation")
+                .replace(/\benedis\b/gi, "")
+                .replace(/\s{2,}/g, " ")
+                .trim();
+            return text.slice(0, 500);
+        }
+
+        function lastAgentReply() {
+            const turns = chatTurns.filter(t => t.role === "assistant");
+            return turns.length ? turns[turns.length - 1].content : "";
+        }
+
+        function agentAlreadySaid(text) {
+            const needle = normalizeReply(text);
+            if (!needle || needle.length < 12) return false;
+            return chatTurns.filter(t => t.role === "assistant").some(t => {
+                const n = normalizeReply(t.content);
+                return n === needle || (n.includes(needle) && needle.length > 20);
+            });
+        }
+
+        function countProspectObjections() {
+            return prospectUserTurns().filter(t =>
+                prospectRefuses(t) || prospectIsHostile(t) || /occupe|presse|rgpd|numero|donnees|fournisseur|changer|iban|confiance/i.test(prospectTextNorm(t))
+            ).length;
+        }
+
+        function agentOfferedLeaveChoice() {
+            return chatTurns.some(t => t.role === "assistant" && /on regarde en deux minutes|qu est-ce que vous preferez|laisse tranquille|soit on regarde/i.test(prospectTextNorm(t.content)));
+        }
+
+        function resolveCriticalObjectionReply(prospectText) {
+            return getObjectionHandlingReply(prospectText);
+        }
+
+        function resolveRuleBasedAgentReply(prospectText) {
+            return null;
+        }
+
+        function isWeakAckOnly(reply) {
+            const t = normalizeReply(reply);
+            return t.length < 95
+                && /(legitime|je comprends|bonne question|je vous entends)/i.test(t)
+                && !/\b(pdl|consommation|estimation|linky|euro|fournisseur|home energy|72|85)\b/i.test(t);
+        }
+
+        function isNearDuplicateAgentReply(reply) {
+            const cur = normalizeReply(reply);
+            if (!cur || cur.length < 24) return false;
+            return chatTurns.filter(t => t.role === "assistant").some(t => {
+                const n = normalizeReply(t.content);
+                if (n === cur) return true;
+                if (cur.length > 50 && n.length > 50 && n.slice(0, 55) === cur.slice(0, 55)) return true;
+                return false;
+            });
+        }
+
+        function getAgentFallbackReply(prospectText) {
+            const scripted = getObjectionHandlingReply(prospectText);
+            if (scripted) return scripted;
+
+            if (prospectAskedEstimationMethod(prospectText)) {
+                if (!agentCollectedPdlOrAddressForConso()) {
+                    if (prospectRefusesPdl(prospectText)) return getPdlRefusalReply();
+                    return "Très bonne question : avant de vous annoncer un montant, je dois récupérer votre consommation — le PDL en 14 chiffres sur votre facture, ou votre adresse si vous ne l'avez pas. Vous avez une facture sous la main ?";
+                }
+                if (!agentPresentedOhmSupplier()) {
+                    return getOhmSupplierPitchReply();
+                }
+                return getHomeEnergyOfferReply();
+            }
+
+            const phase = getCallPhase();
+            const confirm = pickRandom(getProfileAdaptation().confirm || ["D'accord", "Très bien", "C'est parfait"]);
+
+            if (phase === "opening") {
+                return confirm + ". Vous êtes auprès de quel fournisseur actuellement pour votre électricité ?";
+            }
+            if (phase === "discovery" && !prospectMentionedBill()) {
+                return confirm + ". Vous payez combien par mois pour votre électricité ?";
+            }
+            if (phase === "discovery" && !prospectMentionedRegularization()) {
+                return "Comment ça se passe au niveau de la régularisation — est-ce que vous rajoutez à la fin de l'année ?";
+            }
+            if (phase === "discovery" && prospectMentionedBill()) {
+                if (!prospectMentionedSupplier()) {
+                    return confirm + ". Chez quel fournisseur êtes-vous actuellement pour l'électricité ?";
+                }
+                return confirm + ". Comment ça se passe au niveau de la régularisation en fin d'année ?";
+            }
+            if (phase === "identity") {
+                return confirm + ". Pour vérifier votre dossier, vous êtes à quelle adresse ?";
+            }
+            if (phase === "qualification" && !/\b(appartement|maison|m2|m²|linky|linky)\b/i.test(prospectUserTurns().join(" "))) {
+                return confirm + ". Vous habitez en appartement ou en maison, et quelle surface environ ?";
+            }
+            if (phase === "qualification") {
+                return confirm + ". Votre chauffage et l'eau chaude sont bien tout électrique ?";
+            }
+            if (phase === "consumption") {
+                if (prospectRefusesPdl(prospectText)) return getPdlRefusalReply();
+                return getConsumptionCollectionReply();
+            }
+            if (phase === "supplier") {
+                const pitch = getOhmSupplierPitchReply();
+                if (agentCollectedPdlOrAddressForConso()) {
+                    return pitch + " " + getHomeEnergyOfferReply();
+                }
+                return pitch;
+            }
+            if (phase === "offer") {
+                return getHomeEnergyOfferReply();
+            }
+            return confirm + ". Pour avancer : avez-vous le PDL en 14 chiffres sur une facture, ou je reprends votre adresse ?";
+        }
+
+        function ensureAgentReplyAddressesProspect(reply, prospectText) {
+            const out = (reply || "").trim();
+            if (!out || out.length < 8 || isAgentMetaLeak(out)) {
+                return getAgentFallbackReply(prospectText);
+            }
+            return out;
+        }
+
+        function finalizeAgentReply(raw, prospectText) {
+            let reply = cleanAgentReply(raw);
+            if (isIncompleteSentence(reply)) {
+                reply = reply.replace(/[,;:]\s*(pour|afin|que|de|à|a)\s*$/i, ".").trim();
+            }
+            if (blocksPrematureOffer(reply)) {
+                if (!agentCollectedPdlOrAddressForConso()) {
+                    reply = getConsumptionCollectionReply();
+                } else if (!agentPresentedOhmSupplier()) {
+                    reply = getOhmSupplierPitchReply();
+                }
+            }
+            if (isIncompleteSentence(reply) || !reply || reply.length < 8 || isAgentMetaLeak(reply)
+                || isWeakAckOnly(reply) || isNearDuplicateAgentReply(reply)) {
+                reply = getAgentFallbackReply(prospectText);
+            }
+            return ensureAgentReplyAddressesProspect(reply, prospectText);
+        }
+
+        function buildAgentTurnMessages() {
+            return chatTurns.slice(-16).map(t => {
+                if (t.role === "assistant") {
+                    return { role: "assistant", content: t.content.slice(0, 500) };
+                }
+                return {
+                    role: "user",
+                    content: ("[Le prospect au téléphone dit] : " + t.content).slice(0, 520)
+                };
+            });
+        }
+
+        function setStatus(t, cls) {
+            statusText.textContent = t;
+            statusText.className = "status-badge " + cls;
+        }
+
+        function escapeHtml(text) {
+            return String(text ?? "")
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function normalizeProspectTranscript(text) {
+            let t = String(text || "").replace(/\s+/g, " ").trim();
+            if (!t) return "";
+            const fixes = [
+                [/\bau génie\b/gi, "Ogenies"],
+                [/\bogini\b/gi, "Ogenies"],
+                [/\bogenie\b/gi, "Ogenies"],
+                [/\belectricite\b/gi, "électricité"],
+                [/\bfacture d electricite\b/gi, "facture d'électricité"],
+                [/\bhomme nrj\b/gi, "OHM Energy"],
+                [/\bhome energy\b/gi, "Home Energy"],
+                [/\bnet ste\b/gi, "Engie"],
+                [/\bnr j\b/gi, "NRJ"],
+                [/\bkilowatt heure\b/gi, "kilowatt-heure"],
+                [/\bk w h\b/gi, "kWh"],
+                [/\bengie\b/gi, "Engie"],
+                [/\bedf\b/gi, "EDF"],
+                [/\btotal energie\b/gi, "TotalEnergies"]
+            ];
+            fixes.forEach(([pattern, replacement]) => { t = t.replace(pattern, replacement); });
+            return t.replace(/\s+/g, " ").trim();
+        }
+
+        function pickBestSpeechAlternative(result) {
+            if (!result || !result.length) return "";
+            let best = "";
+            let bestScore = -1;
+            for (let i = 0; i < result.length; i++) {
+                const alt = result[i];
+                const text = (alt && alt.transcript) ? alt.transcript.trim() : "";
+                if (!text) continue;
+                let score = Number(alt.confidence || 0);
+                if (/[àâäéèêëïîôùûüç]/i.test(text)) score += 0.15;
+                if (/\b(je|vous|non|oui|madame|monsieur|électricité|facture|intéress)\b/i.test(text)) score += 0.1;
+                if (/[a-zA-Z]{15,}/.test(text.replace(/\s+/g, ""))) score -= 0.2;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = text;
+                }
+            }
+            return best || ((result[0] && result[0].transcript) ? result[0].transcript.trim() : "");
+        }
+
+        function buildSpeechTranscriptFromResults(results) {
+            if (!results || !results.length) return "";
+            const finals = [];
+            let interim = "";
+            for (let i = 0; i < results.length; i++) {
+                const alt = results[i][0];
+                const piece = alt && alt.transcript ? alt.transcript.trim() : "";
+                if (!piece) continue;
+                if (results[i].isFinal) finals.push(piece);
+                else interim = piece;
+            }
+            return (finals.join(" ") + (interim ? " " + interim : "")).replace(/\s+/g, " ").trim();
+        }
+
+        function stageSpeechTranscriptForReview(text) {
+            const cleaned = normalizeProspectTranscript(text);
+            if (!cleaned) return false;
+            if (textInput) {
+                textInput.value = cleaned;
+                textInput.focus();
+                try { textInput.setSelectionRange(cleaned.length, cleaned.length); } catch (_) {}
+            }
+            updateSpeechPreview("");
+            setStatus("Vérifiez la transcription puis cliquez Envoyer", "status-listening");
+            return true;
+        }
+
+        function addLog(who, text, cls) {
+            logDiv.insertAdjacentHTML("beforeend", "<div class=\"" + cls + "\"><strong>" + escapeHtml(who) + " :</strong> " + escapeHtml(text) + "</div>");
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+
+        function scoreBenchmarkAgentReply(reply, prospectText) {
+            const t = (reply || "").trim();
+            if (!t) return { score: 0, french: false, noEcho: false, inRole: false };
+            const french = !isAgentMetaLeak(t) && (/\b(je|vous|comprends|d'accord|bonjour|samuel|ogenies|c est parfait)\b/i.test(t));
+            const noEcho = !isAgentEcho(t, prospectText);
+            const inRole = !isAgentMetaLeak(t);
+            let score = 0;
+            if (french) score += 35;
+            if (noEcho) score += 30;
+            if (inRole) score += 20;
+            if (t.length >= 12 && t.length <= 400) score += 15;
+            return { score, french, noEcho, inRole };
+        }
+
+        async function runSingleModelBenchmark(apiKey, model, prospectText) {
+            const started = performance.now();
+            const system = AGENT_SCRIPT.split("\n").slice(0, AGENT_SCRIPT_COMPACT_LINES).join("\n");
+            const messages = [
+                { role: "system", content: system + "\n\nRéponds UNIQUEMENT en français oral comme Samuel." },
+                { role: "assistant", content: buildAgentOpening("intermediaire") },
+                { role: "user", content: "[Le prospect au téléphone dit] : " + prospectText }
+            ];
+            try {
+                const raw = await callOpenRouter(messages, apiKey, model, getAgentMaxTokens(model), 0.68, false);
+                const reply = finalizeAgentReply(raw, prospectText);
+                const latency = Math.round(performance.now() - started);
+                const metrics = scoreBenchmarkAgentReply(reply, prospectText);
+                return { model, ok: true, latency, reply, ...metrics };
+            } catch (e) {
+                return { model, ok: false, latency: Math.round(performance.now() - started), score: 0, error: e.message || String(e) };
+            }
+        }
+
+        async function runFreeModelsBenchmark() {
+            const apiKey = getApiKey();
+            const keyErr = validateApiKey(apiKey);
+            if (keyErr) return alert(keyErr);
+            const btn = document.getElementById("benchmarkModelsBtn");
+            const out = document.getElementById("benchmarkModelsResult");
+            if (!btn || !out) return;
+            const prospectText = "Ça ne m'intéresse pas.";
+            const models = BENCHMARK_FREE_MODELS.slice();
+            const current = getModel();
+            if (current.endsWith(":free") && !models.includes(current)) models.unshift(current);
+            btn.disabled = true;
+            btn.textContent = "Comparaison en cours…";
+            out.style.display = "block";
+            out.innerHTML = "<p class='hint'>Test agent IA sur " + models.length + " modèles (objection prospect)…</p>";
+            const results = [];
+            for (let i = 0; i < models.length; i++) {
+                out.innerHTML = "<p class='hint'>Modèle " + (i + 1) + "/" + models.length + " : " + models[i] + "…</p>";
+                results.push(await runSingleModelBenchmark(apiKey, models[i], prospectText));
+                if (i < models.length - 1) await new Promise(r => setTimeout(r, 1500));
+            }
+            results.sort((a, b) => (b.score || 0) - (a.score || 0) || (a.latency || 99999) - (b.latency || 99999));
+            const best = results[0];
+            let html = "<p><strong>Résultat</strong> — objection : « " + prospectText + " »</p>";
+            html += "<table><thead><tr><th>Modèle</th><th>Score</th><th>FR</th><th>Pas écho</th><th>Rôle agent</th><th>ms</th></tr></thead><tbody>";
+            results.forEach((r, idx) => {
+                const label = r.model.replace(/:free$/, "").split("/").pop();
+                html += "<tr class='" + (idx === 0 && r.ok ? "best-row" : "") + "'>";
+                html += "<td title='" + r.model + "'>" + label + "</td>";
+                if (!r.ok) html += "<td colspan='5'>" + (r.error || "erreur") + "</td>";
+                else {
+                    html += "<td>" + r.score + "/100</td><td>" + (r.french ? "✓" : "✗") + "</td>";
+                    html += "<td>" + (r.noEcho ? "✓" : "✗") + "</td><td>" + (r.inRole ? "✓" : "✗") + "</td><td>" + r.latency + "</td>";
+                }
+                html += "</tr>";
+            });
+            html += "</tbody></table>";
+            if (best && best.ok) {
+                html += "<p style='margin-top:10px;'><strong>Meilleur :</strong> " + best.model + " — « " + (best.reply || "").slice(0, 100) + "… »</p>";
+                html += "<button type='button' id='applyBestModelBtn' data-model='" + best.model + "' style='margin-top:6px;padding:6px 12px;border-radius:6px;border:none;background:var(--lc-teal);color:#fff;cursor:pointer;'>Utiliser ce modèle</button>";
+            }
+            out.innerHTML = html;
+            const applyBtn = document.getElementById("applyBestModelBtn");
+            if (applyBtn) {
+                applyBtn.onclick = () => {
+                    const sel = document.getElementById("nvidiaModelSelect");
+                    if (!sel) return;
+                    const wanted = applyBtn.dataset.model;
+                    let found = false;
+                    for (const opt of sel.options) { if (opt.value === wanted) { sel.value = wanted; found = true; break; } }
+                    if (!found) {
+                        const opt = document.createElement("option");
+                        opt.value = wanted;
+                        opt.textContent = wanted + " (benchmark)";
+                        sel.appendChild(opt);
+                        sel.value = wanted;
+                    }
+                    alert("Modèle sélectionné : " + wanted);
+                };
+            }
+            btn.disabled = false;
+            btn.textContent = "⚡ Comparer 4 modèles gratuits (test rapide)";
+        }
+
+        async function callOpenRouter(messages, apiKey, model, maxTokens, temperature, isEval) {
+            const resolvedModel = model || getModel();
+            let tokenLimit = maxTokens || getAgentMaxTokens(resolvedModel);
+            const basePayload = {
+                model: resolvedModel,
+                messages,
+                max_tokens: tokenLimit,
+                temperature: temperature != null ? temperature : 0.68,
+                frequency_penalty: 0.25,
+                presence_penalty: 0.15
+            };
+            const attempts = isFreeOpenRouterModel(resolvedModel)
+                ? [basePayload, { ...basePayload, reasoning: { effort: "none", exclude: true } }]
+                : [{ ...basePayload, reasoning: { effort: "none", exclude: true } }, basePayload];
+            let lastError = null;
+
+            for (const payload of attempts) {
+                try {
+                    const res = await fetch(OPENROUTER_URL, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": "Bearer " + apiKey,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": location.origin || "http://localhost:8501",
+                            "X-Title": "AI Call Simulator v2"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    const raw = await res.text();
+                    let data = {};
+                    try { data = raw ? JSON.parse(raw) : {}; } catch (_) {
+                        throw new Error("Réponse OpenRouter invalide (" + res.status + ")");
+                    }
+                    if (!res.ok) {
+                        const msg = formatOpenRouterError(data, res.status);
+                        const affordable = parseAffordableMaxTokens(typeof data?.error === "string" ? data.error : data?.error?.message);
+                        if (res.status === 402 && affordable && payload.max_tokens > affordable) {
+                            return callOpenRouter(messages, apiKey, resolvedModel, affordable, temperature, isEval);
+                        }
+                        if (payload.reasoning && (res.status === 400 || res.status === 422)) {
+                            lastError = new Error(msg);
+                            continue;
+                        }
+                        throw new Error(msg);
+                    }
+                    const text = extractOpenRouterText(data, !!isEval);
+                    if (!text) {
+                        console.warn("OpenRouter réponse sans texte:", data);
+                        throw new Error("Réponse vide du modèle — essayez un autre modèle");
+                    }
+                    return text;
+                } catch (e) {
+                    lastError = e;
+                    if (payload.reasoning) continue;
+                    throw e;
+                }
+            }
+            throw lastError || new Error("Erreur OpenRouter");
+        }
+
+        function buildAgentOpenRouterMessages(plan, prospectLine, extra, model) {
+            let system = plan.compact ? compactSystemPromptText : systemPromptText;
+            if (extra) system += "\n\n" + extra;
+            system += buildTurnContextHint(prospectLine, model);
+            if (!plan.compact) {
+                system += getAgentAntiRepeatContext();
+            }
+            system += "\n\nLANGUE ET STYLE (OBLIGATOIRE) :\n"
+                + "- Réponds UNIQUEMENT en français oral comme Samuel au téléphone.\n"
+                + "- Écoute la dernière réplique du prospect et réponds DIRECTEMENT à ce qu'il dit.\n"
+                + "- Ne répète JAMAIS mot pour mot tes répliques précédentes.\n"
+                + "- Phrases COMPLÈTES (2-4 phrases). Ne raccroche pas tant qu'une question directe reste sans réponse.\n"
+                + "- Scripts d'objections = GUIDES à reformuler selon le contexte, pas à réciter.";
+            let turns = buildAgentTurnMessages();
+            if (plan.maxTurns && turns.length > plan.maxTurns) {
+                turns = turns.slice(-plan.maxTurns);
+            }
+            const trimLen = plan.compact ? 320 : null;
+            if (trimLen) {
+                turns = turns.map(t => ({
+                    ...t,
+                    content: t.content.slice(0, trimLen)
+                }));
+            }
+            return [{ role: "system", content: system }, ...turns];
+        }
+
+        function validateAgentLLMReply(reply, prospectLine) {
+            const cleaned = cleanAgentReply(reply);
+            if (!cleaned || cleaned.length < 8 || isAgentMetaLeak(cleaned)) return null;
+            if (isAgentEcho(cleaned, prospectLine)) return null;
+            if (isIncompleteSentence(cleaned)) return null;
+            return cleaned;
+        }
+
+        async function callAgentLLM(apiKey, extra) {
+            const prospectLine = lastProspectText();
+
+            if (shouldAllowGracefulClose(prospectLine)) {
+                return "D'accord, je respecte votre choix. Merci pour votre temps — bonne journée à vous.";
+            }
+
+            const models = [getModel(), ...OPENROUTER_FALLBACK_MODELS.filter(m => m !== getModel())];
+            const retryPlans = isFreeOpenRouterModel(getModel())
+                ? [
+                    { compact: false, maxTurns: null },
+                    { compact: false, maxTurns: 10 },
+                    { compact: true, maxTurns: 8 },
+                    { compact: true, maxTurns: 4 }
+                ]
+                : [
+                    { compact: false, maxTurns: null },
+                    { compact: true, maxTurns: 12 },
+                    { compact: true, maxTurns: 6 }
+                ];
+            let lastError = null;
+
+            for (const model of models) {
+                const maxTokens = getAgentMaxTokens(model);
+                const temperature = getAgentTemperature(model);
+                for (const plan of retryPlans) {
+                    const messages = buildAgentOpenRouterMessages(plan, prospectLine, extra, model);
+                    try {
+                        const raw = await callOpenRouter(messages, apiKey, model, maxTokens, temperature, false);
+                        const reply = validateAgentLLMReply(raw, prospectLine);
+                        if (reply) return finalizeAgentReply(reply, prospectLine);
+                    } catch (e) {
+                        lastError = e;
+                        const errMsg = e.message || String(e);
+                        if (/rate limit|429|too many requests|503|provider returned error/i.test(errMsg)) {
+                            break;
+                        }
+                        const retryable = isPromptTokenLimitError(errMsg) || /can only afford/i.test(errMsg);
+                        if (!retryable) break;
+                        console.warn("Agent LLM retry", model, plan, errMsg);
+                    }
+                }
+            }
+            if (lastError) console.warn("Agent LLM fallback:", lastError.message);
+            return finalizeAgentReply(getAgentFallbackReply(prospectLine), prospectLine);
+        }
+
+        function cleanSpeech(t) {
+            return t.replace(/\([^)]*\)/g, " ").replace(/\*+/g, "").replace(/\s+/g, " ").trim();
+        }
+
+        function pushToStreamlit(value) {
+            if (window.Streamlit && typeof Streamlit.setComponentValue === "function") {
+                Streamlit.setComponentValue(value);
+                return true;
+            }
+            const targets = [window.parent, window.top];
+            const msg = value.action === "update_eval"
+                ? { type: "UPDATE_CONVERSATION_EVAL", conversation_id: value.conversation_id, evaluation: value.evaluation }
+                : { type: "SAVE_CONVERSATION", payload: value.payload || value };
+            for (const t of targets) {
+                try { t.postMessage(msg, "*"); } catch (_) {}
+            }
+            return false;
+        }
+
+        function updateSpeechPreview(text) {
+            if (!speechPreview) return;
+            speechPreview.textContent = text ? ("🎙️ « " + text + " »") : "";
+        }
+
+        function updateLiveTranscript(rawText) {
+            const display = normalizeProspectTranscript(rawText) || String(rawText || "").trim();
+            updateSpeechPreview(display);
+            if (textInput && isListening) {
+                textInput.value = display;
+                try { textInput.setSelectionRange(display.length, display.length); } catch (_) {}
+            }
+        }
+
+        function startSpeechListen() {
+            if (!recognition) throw new Error("Micro non disponible — utilisez Chrome ou le champ texte");
+            speechTranscript = "";
+            lastRecognitionResults = null;
+            updateSpeechPreview("");
+            if (textInput) textInput.value = "";
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.onresult = (e) => {
+                lastRecognitionResults = e.results;
+                speechTranscript = buildSpeechTranscriptFromResults(e.results);
+                if (speechTranscript) updateLiveTranscript(speechTranscript);
+            };
+            recognition.onerror = (e) => {
+                if (e.error === "aborted") return;
+                isListening = false;
+                recordTimer.textContent = "";
+                talkBtn.textContent = "🎤 Parler en tant que prospect";
+                talkBtn.style.background = "";
+                updateSpeechPreview("");
+                const msg = e.error === "network"
+                    ? "Service vocal Chrome indisponible — tapez votre réplique en bas"
+                    : e.error === "no-speech"
+                        ? "Aucune voix détectée — réessayez ou tapez votre réplique"
+                        : e.error === "not-allowed"
+                            ? "Micro refusé — autorisez le micro dans Chrome ou tapez votre réplique"
+                            : "Micro : " + e.error;
+                alert(msg);
+                setStatus("Réessayez ou tapez votre réplique", "status-listening");
+            };
+            recognition.onend = () => {
+                if (isListening) {
+                    try { recognition.start(); } catch (_) {}
+                }
+            };
+            recognition.start();
+            isListening = true;
+            setStatus("🎤 Parlez maintenant…", "status-listening");
+            recordTimer.textContent = "Enregistrement — cliquez Arrêter quand vous avez fini";
+            talkBtn.textContent = "⏹ Arrêter — vérifier la transcription";
+            talkBtn.style.background = "#dc2626";
+        }
+
+        function stopSpeechListen() {
+            return new Promise((resolve, reject) => {
+                if (!recognition) return reject(new Error("Micro non disponible"));
+                isListening = false;
+                let settled = false;
+                const finish = (rawText) => {
+                    if (settled) return;
+                    settled = true;
+                    recordTimer.textContent = "";
+                    talkBtn.textContent = "🎤 Parler en tant que prospect";
+                    talkBtn.style.background = "";
+                    updateSpeechPreview("");
+                    const cleaned = normalizeProspectTranscript(rawText) || String(rawText || "").trim();
+                    if (textInput) textInput.value = cleaned;
+                    if (cleaned) resolve(cleaned);
+                    else reject(new Error("Aucune voix détectée — parlez plus fort ou tapez votre réplique"));
+                };
+                recognition.onend = () => {
+                    let text = speechTranscript.trim();
+                    if (lastRecognitionResults) {
+                        text = buildSpeechTranscriptFromResults(lastRecognitionResults) || text;
+                    }
+                    finish(text);
+                };
+                const pending = speechTranscript.trim();
+                setTimeout(() => {
+                    if (!settled && pending) finish(pending);
+                }, pending ? 150 : 700);
+                try {
+                    recognition.stop();
+                } catch (e) {
+                    finish(pending);
+                }
+            });
+        }
+
+        async function speakAgent(text) {
+            const t = cleanSpeech(text);
+            if (!t) return;
+            setAgentVisual("speaking", t.slice(0, 120));
+            if (!document.getElementById("voiceToggle").checked) {
+                setTimeout(() => setAgentVisual("listening"), 1200);
+                return;
+            }
+            if (synth) {
+                synth.cancel();
+                const u = new SpeechSynthesisUtterance(t);
+                u.lang = "fr-FR";
+                if (frenchVoice) u.voice = frenchVoice;
+                u.onend = () => setAgentVisual(callActive ? "listening" : "idle");
+                synth.speak(u);
+            }
+        }
+
+        async function sendProspectMessage(text) {
+            const apiKey = getApiKey();
+            const keyErr = validateApiKey(apiKey);
+            if (keyErr) return alert(keyErr);
+            if (synth && synth.speaking) synth.cancel();
+            addLog("Prospect (Vous)", text, "prospect-msg");
+            chatTurns.push({ role: "user", content: text });
+            setAgentVisual("thinking");
+            setStatus("L'agent IA répond…", "status-thinking");
+            try {
+                const reply = await callAgentLLM(apiKey);
+                chatTurns.push({ role: "assistant", content: reply });
+                addLog("Agent IA", reply, "agent-msg");
+                void speakAgent(reply);
+                updateLiveStats();
+                updateCallJourney();
+                setAgentVisual("listening");
+                setStatus("À vous — posez une objection ou une question", "status-listening");
+            } catch (e) {
+                console.warn("Agent LLM error, fallback:", e.message);
+                const fallback = finalizeAgentReply(getAgentFallbackReply(text), text);
+                chatTurns.push({ role: "assistant", content: fallback });
+                addLog("Agent IA", fallback, "agent-msg");
+                void speakAgent(fallback);
+                updateLiveStats();
+                updateCallJourney();
+                setAgentVisual("listening");
+                setStatus("À vous — posez une objection ou une question (mode secours)", "status-listening");
+            }
+        }
+
+        function buildPayload(evaluation) {
+            return {
+                training_mode: TRAINING_MODE,
+                profile: getProfile(),
+                level: getLevel(),
+                model: getModel(),
+                started_at: callStartedAt,
+                ended_at: new Date().toISOString(),
+                persona: {
+                    firstName: callScenario.firstName,
+                    lastName: callScenario.lastName,
+                    supplier: callScenario.supplier,
+                    billAmount: callScenario.billAmount
+                },
+                evaluation: evaluation || null,
+                messages: chatTurns.map(t => ({ role: t.role, content: t.content }))
+            };
+        }
+
+        function stashPendingEval(apiKey) {
+            sessionStorage.setItem(PENDING_EVAL_KEY, JSON.stringify({
+                apiKey, chatTurns, callStartedAt, stashed_at: Date.now()
+            }));
+        }
+
+        async function saveToDb(evaluation) {
+            if (!chatTurns.length) return null;
+            const payload = buildPayload(evaluation);
+            if (useStreamlitSave()) {
+                pushToStreamlit({ action: "save", payload: payload });
+                document.getElementById("dbStatus").innerHTML = "⏳ Enregistrement…";
+                return "streamlit";
+            }
+            try {
+                const r = await fetch((getCfg().conversationApiUrl || "http://127.0.0.1:8766") + "/api/conversations", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || "Erreur");
+                lastConversationId = d.conversation_id;
+                return d.conversation_id;
+            } catch (e) {
+                document.getElementById("dbStatus").innerHTML = "⚠️ " + e.message;
+                return null;
+            }
+        }
+
+        async function updateEvalInDb(convId, evaluation) {
+            if (useStreamlitSave()) {
+                pushToStreamlit({
+                    action: "update_eval",
+                    conversation_id: convId,
+                    evaluation: evaluation
+                });
+                return;
+            }
+            try {
+                await fetch((getCfg().conversationApiUrl || "http://127.0.0.1:8766") + "/api/conversations/" + convId + "/evaluation", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ evaluation })
+                });
+            } catch (_) {}
+        }
+
+        async function evaluateAgent(apiKey) {
+            const agentLines = chatTurns.filter(t => t.role === "assistant").map((t, i) => (i + 1) + ". " + t.content).join("\n");
+            const transcript = chatTurns.map(t => (t.role === "assistant" ? "AGENT IA" : "PROSPECT") + ": " + t.content).join("\n");
+            const prompt = `Tu es formateur vente énergie. Évalue comment l'AGENT IA Samuel a mené l'appel.
+Critères : respect de la structure (accroche → découverte → qualification → offre → closing), adaptation au profil prospect, diversité des formulations (pas un script récité).
+Profil prospect joué : ${getProfile()} (${PROFILES[getProfile()].label}), niveau : ${getLevel()}.
+
+Réponds en JSON valide :
+{"score_total":0-100,"niveau":"Excellent|Bon|À améliorer|Coaching nécessaire",
+"points_forts":["","",""],"axes_amelioration":["","",""],
+"techniques_observees":["reformulation","empathie","pain point régularisation",...],
+"commentaire":"analyse pédagogique pour les stagiaires"}
+
+RÉPLIQUES AGENT IA :
+${agentLines.slice(0, 3500)}
+
+TRANSCRIPTION :
+${transcript.slice(0, 2500)}`;
+
+            const models = [getModel(), ...OPENROUTER_FALLBACK_MODELS.filter(m => m !== getModel())];
+            for (const model of models) {
+                try {
+                    const raw = await callOpenRouter([
+                        { role: "system", content: "Réponds uniquement en JSON valide." },
+                        { role: "user", content: prompt }
+                    ], apiKey, model, getEvalMaxTokens(model), 0.25, true);
+                    const m = raw.match(/\{[\s\S]*\}/);
+                    if (m) return JSON.parse(m[0]);
+                } catch (_) {}
+            }
+            return {
+                score_total: 65,
+                niveau: "À améliorer",
+                points_forts: ["Samuel s'est présenté clairement.", "Ton professionnel maintenu."],
+                axes_amelioration: ["Approfondir la qualification logement avant l'offre.", "Mieux traiter le pain point régularisation."],
+                techniques_observees: ["présentation", "questionnement", "comparatif"],
+                commentaire: "Analyse locale — relancez si besoin avec crédits OpenRouter."
+            };
+        }
+
+        function renderEval(data) {
+            const s = Number(data.score_total) || 0;
+            return `<div class="eval-header">
+                <div class="eval-score-badge"><span class="score-num">${s}/100</span><span>${data.niveau || ""}</span></div>
+                <div><p><strong>Comment l'agent IA a géré vos objections</strong></p>
+                <p class="hint">${data.commentaire || ""}</p></div>
+            </div>
+            <div class="eval-section"><h4>✅ Points forts de l'agent IA</h4><ul>${(data.points_forts||[]).map(x=>"<li>"+x+"</li>").join("")}</ul></div>
+            <div class="eval-section"><h4>📈 Axes d'amélioration (à observer en formation)</h4><ul>${(data.axes_amelioration||[]).map(x=>"<li>"+x+"</li>").join("")}</ul></div>
+            <div class="eval-section"><h4>🎯 Techniques observées</h4><ul>${(data.techniques_observees||[]).map(x=>"<li>"+x+"</li>").join("")}</ul></div>`;
+        }
+
+        async function runHangupEvaluation(apiKey) {
+            setStatus("Analyse de l'agent IA…", "status-thinking");
+            stopBtn.disabled = true;
+            talkBtn.disabled = true;
+            sendTextBtn.disabled = true;
+            textInput.disabled = true;
+            try {
+                const ev = await evaluateAgent(apiKey);
+                saveCoachingTips(ev);
+                evalContent.innerHTML = renderEval(ev);
+                evalDiv.style.display = "block";
+                syncStreamlitFrameHeight(1400);
+                try { evalDiv.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
+                if (lastConversationId) await updateEvalInDb(lastConversationId, ev);
+            } catch (e) {
+                alert("Analyse impossible : " + (e.message || e));
+            } finally {
+                resetUi();
+            }
+        }
+
+        async function resumePendingEval() {
+            const raw = sessionStorage.getItem(PENDING_EVAL_KEY);
+            if (!raw) return;
+            if (window.__evalResumeInProgress) return;
+
+            const result = getCfg().lastSaveResult;
+            if (!result?.ok || !result.conversation_id) {
+                return;
+            }
+
+            window.__evalResumeInProgress = true;
+            try {
+                const pending = JSON.parse(raw);
+                sessionStorage.removeItem(PENDING_EVAL_KEY);
+                chatTurns = pending.chatTurns || [];
+                callStartedAt = pending.callStartedAt;
+                lastConversationId = result.conversation_id;
+                await runHangupEvaluation(pending.apiKey);
+                document.getElementById("dbStatus").innerHTML = "✅ Session #" + result.conversation_id + " enregistrée";
+            } finally {
+                window.__evalResumeInProgress = false;
+            }
+        }
+
+        function showSaveResult() {
+            const d = getCfg().lastSaveResult;
+            if (!d) return;
+            const el = document.getElementById("dbStatus");
+            if (d.ok) {
+                lastConversationId = d.conversation_id;
+                el.innerHTML = d.updated
+                    ? "✅ Évaluation enregistrée — #" + d.conversation_id
+                    : "✅ Appel #" + d.conversation_id + " enregistré";
+                el.style.color = "#16a34a";
+            } else if (d.error) {
+                el.innerHTML = "⚠️ Sauvegarde : " + d.error;
+                el.style.color = "#d97706";
+            }
+        }
+
+        function resetUi() {
+            callActive = false;
+            document.body.classList.remove("call-active");
+            stopCallTimer();
+            startBtn.disabled = false;
+            talkBtn.disabled = true;
+            sendTextBtn.disabled = true;
+            textInput.disabled = true;
+            stopBtn.disabled = true;
+            setAgentVisual("idle");
+            setStatus("Ligne inactive", "status-idle");
+        }
+
+        startBtn.addEventListener("click", async () => {
+            try {
+            const apiKey = getApiKey();
+            const keyErr = validateApiKey(apiKey);
+            if (keyErr) return alert(keyErr);
+            callScenario = createCallScenario();
+            systemPromptText = buildSystemPrompt();
+            compactSystemPromptText = buildCompactAgentSystemPrompt();
+            const opening = buildAgentOpening(getLevel());
+            chatTurns = [{ role: "assistant", content: opening }];
+            callStartedAt = new Date().toISOString();
+            logDiv.innerHTML = "";
+            evalDiv.style.display = "none";
+            callActive = true;
+            document.body.classList.add("call-active");
+            sessionStorage.removeItem(PENDING_EVAL_KEY);
+            startCallTimer();
+            updateScenarioPreview();
+            startBtn.disabled = true;
+            talkBtn.disabled = !speechRecAvailable;
+            sendTextBtn.disabled = false;
+            textInput.disabled = false;
+            stopBtn.disabled = false;
+            addLog("Agent IA", opening, "agent-msg");
+            addLog("Scénario", "À jouer : " + callScenario.firstName + " " + callScenario.lastName
+                + " — " + callScenario.supplier + ", ~" + callScenario.billAmount + " €/mois (élec seule). "
+                + "L'agent IA ne connaît pas votre nom.", "prospect-msg");
+            updateLiveStats();
+            updateCallJourney();
+            setAgentVisual("speaking", opening.slice(0, 120));
+            setStatus("L'agent IA vous appelle — répondez comme le prospect", "status-listening");
+            await speakAgent(opening);
+            } catch (e) {
+                console.error("Start v2 error:", e);
+                alert("Erreur au démarrage : " + (e.message || e));
+                callActive = false;
+                startBtn.disabled = false;
+                setStatus("Erreur — réessayez", "status-idle");
+            }
+        });
+
+        talkBtn.addEventListener("click", async () => {
+            if (!callActive) return;
+            try {
+                if (!isListening) {
+                    startSpeechListen();
+                } else {
+                    const userText = await stopSpeechListen();
+                    if (!stageSpeechTranscriptForReview(userText)) {
+                        setStatus("Réessayez ou tapez votre réplique", "status-listening");
+                    }
+                }
+            } catch (e) {
+                alert(e.message);
+                setStatus("Réessayez ou tapez votre réplique", "status-listening");
+            }
+        });
+
+        sendTextBtn.addEventListener("click", () => {
+            const t = textInput.value.trim();
+            if (!t || !callActive) return;
+            textInput.value = "";
+            sendProspectMessage(t);
+        });
+
+        textInput.addEventListener("keydown", e => {
+            if (e.key === "Enter" && callActive) { e.preventDefault(); sendTextBtn.click(); }
+        });
+
+        stopBtn.addEventListener("click", async () => {
+            if (!callActive) return;
+            if (isListening) {
+                try { recognition.stop(); } catch (_) {}
+                isListening = false;
+                recordTimer.textContent = "";
+                talkBtn.textContent = "🎤 Parler en tant que prospect";
+                talkBtn.style.background = "";
+            }
+            if (synth && synth.speaking) synth.cancel();
+            callActive = false;
+            stopBtn.disabled = true;
+            talkBtn.disabled = true;
+            sendTextBtn.disabled = true;
+            textInput.disabled = true;
+            setStatus("Fin de l'appel…", "status-thinking");
+
+            const apiKey = getApiKey();
+            const keyErr = validateApiKey(apiKey);
+            if (keyErr) {
+                alert(keyErr);
+                resetUi();
+                return;
+            }
+            if (!chatTurns.length) {
+                resetUi();
+                return;
+            }
+
+            if (useStreamlitSave()) {
+                stashPendingEval(apiKey);
+                setStatus("Enregistrement…", "status-thinking");
+                pushToStreamlit({ action: "save", payload: buildPayload(null) });
+                document.getElementById("dbStatus").innerHTML = "⏳ Enregistrement…";
+                setTimeout(async () => {
+                    if (sessionStorage.getItem(PENDING_EVAL_KEY)) {
+                        sessionStorage.removeItem(PENDING_EVAL_KEY);
+                        document.getElementById("dbStatus").innerHTML = "⚠️ Sauvegarde lente — analyse locale…";
+                        await runHangupEvaluation(apiKey);
+                    }
+                }, 12000);
+                return;
+            }
+
+            await saveToDb(null);
+            await runHangupEvaluation(apiKey);
+        });
+
+        function applyHostedConfig() {
+            const cfg = getCfg();
+            if (cfg.openrouterApiKey || isStreamlitCloud()) {
+                if (cfg.openrouterApiKey) document.getElementById("apiKey").value = cfg.openrouterApiKey;
+                document.getElementById("apiKeySection").style.display = "none";
+                if (cfg.openrouterApiKey) document.getElementById("apiKeyStatus").style.display = "block";
+            }
+            if (cfg.hostedOnStreamlit || isStreamlitCloud()) {
+                const link = document.getElementById("v1Link");
+                if (link) link.style.display = "none";
+            }
+        }
+
+        if (synth) {
+            const pick = () => {
+                const v = synth.getVoices();
+                frenchVoice = v.find(x => x.lang === "fr-FR") || v.find(x => x.lang?.startsWith("fr")) || null;
+            };
+            pick();
+            if (synth.onvoiceschanged) synth.onvoiceschanged = pick;
+        }
+
+        function initMicStatus() {
+            if (!micStatus) return;
+            if (speechRecAvailable) {
+                micStatus.textContent = "✅ Micro Chrome — parlez distinctement, corrigez la transcription avant d'envoyer";
+                micStatus.style.color = "#16a34a";
+            } else {
+                micStatus.textContent = "⚠️ Micro Chrome indisponible — utilisez Google Chrome ou tapez votre réplique";
+                micStatus.style.color = "#d97706";
+            }
+        }
+
+        function onStreamlitConfigApplied() {
+            applyHostedConfig();
+            initMicStatus();
+            showSaveResult();
+            void resumePendingEval();
+            const el = document.getElementById("dbStatus");
+            const cfg = getCfg();
+            const onStreamlit = useStreamlitSave() || cfg.hostedOnStreamlit || isStreamlitCloud();
+            if (!onStreamlit) return;
+            if (cfg.mysqlEnabled && !cfg.mysqlConnectionWarning) {
+                el.innerHTML = "✅ MySQL connecté via Streamlit";
+                el.style.color = "#16a34a";
+            } else if (cfg.mysqlEnabled) {
+                el.innerHTML = "⚠️ MySQL configuré — sauvegarde tentée à la fin";
+                el.style.color = "#d97706";
+            } else {
+                el.innerHTML = "ℹ️ Ajoutez MYSQL_* dans les Secrets Streamlit";
+                el.style.color = "#2563eb";
+            }
+            syncStreamlitFrameHeight();
+        }
+
+        function syncStreamlitFrameHeight(forceMin) {
+            if (!window.Streamlit || typeof Streamlit.setFrameHeight !== "function") return;
+            const minH = Number(forceMin) || 1050;
+            const scrollH = Math.max(
+                document.documentElement.scrollHeight || 0,
+                document.body.scrollHeight || 0,
+                document.documentElement.offsetHeight || 0
+            );
+            Streamlit.setFrameHeight(Math.max(minH, scrollH + 48));
+        }
+
+        window.addEventListener("message", function (event) {
+            const data = event.data || {};
+            if (data.type === "SIM_CONFIG") {
+                window.__SIMULATOR_CONFIG__ = Object.assign(
+                    window.__SIMULATOR_CONFIG__ || {},
+                    data.config || {}
+                );
+                onStreamlitConfigApplied();
+            }
+            if (data.type === "SAVE_RESULT") {
+                window.__SIMULATOR_CONFIG__ = window.__SIMULATOR_CONFIG__ || {};
+                window.__SIMULATOR_CONFIG__.lastSaveResult = data.result;
+                showSaveResult();
+                resumePendingEval();
+            }
+        });
+
+        const benchmarkBtn = document.getElementById("benchmarkModelsBtn");
+        if (benchmarkBtn) benchmarkBtn.addEventListener("click", () => { void runFreeModelsBenchmark(); });
+
+        (async function initProspect() {
+            stopCallTimer();
+            initMicStatus();
+            initAgentModelSelect();
+            const cfg = getCfg();
+            if (cfg.openrouterApiKey || cfg.streamlitSave || cfg.mysqlEnabled || isStreamlitCloud()) {
+                onStreamlitConfigApplied();
+                await resumePendingEval();
+            } else {
+                const el = document.getElementById("dbStatus");
+                if (el) el.textContent = "Connexion Streamlit…";
+            }
+            syncStreamlitFrameHeight();
+        })();
+
+        window.onStreamlitConfigApplied = onStreamlitConfigApplied;
+        window.resumePendingEvaluation = resumePendingEval;
+        window.syncStreamlitFrameHeight = syncStreamlitFrameHeight;
+    })();
+    
+    </script>
+</body>
+</html>

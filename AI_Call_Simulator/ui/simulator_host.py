@@ -1,0 +1,565 @@
+"""Shared Streamlit host for simulation HTML pages."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import shutil
+import sys
+from pathlib import Path
+
+import streamlit as st
+
+from ui.simulation_component import simulation_app_v1, simulation_app_v2
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ENV_PATH = PROJECT_ROOT / ".env"
+WEB_DIR = PROJECT_ROOT / "web"
+COMPONENT_FRONTEND = Path(__file__).resolve().parent / "simulation_component" / "frontend"
+
+if str(WEB_DIR) not in sys.path:
+    sys.path.insert(0, str(WEB_DIR))
+
+from mysql_store import (
+    apply_mysql_env_from_mapping,
+    check_mysql_connection,
+    list_conversations,
+    save_conversation,
+    update_conversation_evaluation,
+)
+from ui.agent_session import get_agent_name, require_agent_login
+from ui.brand_theme import inject_global_css, render_hero
+
+_STREAMLIT_BOOT = """
+<script src="streamlit-component-lib.js"></script>
+<script>window.__SIMULATOR_CONFIG__ = window.__SIMULATOR_CONFIG__ || {};</script>
+<script>document.documentElement.dataset.hosted = "1";</script>
+<style>#apiKeySection,#apiKeyStatus,#apiHint{display:none!important}</style>
+<script>
+  function applyStreamlitSimulatorConfig() {
+    if (!window.Streamlit || !Streamlit.args) return;
+    var raw = Streamlit.args.simulator_config;
+    if (!raw) return;
+    try {
+      var cfg = typeof raw === "string" ? JSON.parse(raw) : raw;
+      window.__SIMULATOR_CONFIG__ = Object.assign(
+        window.__SIMULATOR_CONFIG__ || {},
+        cfg
+      );
+      document.documentElement.dataset.hosted = "1";
+      if (typeof window.onStreamlitConfigApplied === "function") {
+        window.onStreamlitConfigApplied();
+      }
+      if (typeof window.handleStreamlitTtsResult === "function") {
+        window.handleStreamlitTtsResult();
+      }
+      if (typeof window.resumePendingEvaluation === "function") {
+        window.resumePendingEvaluation();
+      }
+    } catch (e) {
+      console.warn("Simulator config:", e);
+    }
+  }
+  window.addEventListener("load", function () {
+    if (window.Streamlit) Streamlit.setComponentReady();
+    setTimeout(applyStreamlitSimulatorConfig, 80);
+  });
+  if (window.Streamlit) {
+    Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, function () {
+      applyStreamlitSimulatorConfig();
+      if (typeof window.syncStreamlitFrameHeight === "function") {
+        window.syncStreamlitFrameHeight();
+      } else {
+        var minH = (Streamlit.args && Streamlit.args.height) || 2200;
+        var scrollH = Math.max(
+          document.documentElement.scrollHeight || 0,
+          document.body.scrollHeight || 0
+        );
+        Streamlit.setFrameHeight(Math.max(minH, scrollH + 64));
+      }
+    });
+  }
+</script>
+"""
+
+
+def _load_env_file() -> None:
+    if not ENV_PATH.exists():
+        return
+    for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+def _get_secret_or_env(name: str, default: str = "") -> str:
+    _load_env_file()
+    try:
+        value = st.secrets.get(name, "")
+        if value:
+            return str(value).strip()
+    except Exception:
+        pass
+    return os.getenv(name, default).strip()
+
+
+def _mysql_secrets() -> dict[str, str]:
+    keys = (
+        "MYSQL_HOST",
+        "MYSQL_PORT",
+        "MYSQL_USER",
+        "MYSQL_PASSWORD",
+        "MYSQL_DATABASE",
+        "MYSQL_SSL",
+    )
+    return {key: _get_secret_or_env(key) for key in keys if _get_secret_or_env(key)}
+
+
+def _configure_mysql_env() -> bool:
+    values = _mysql_secrets()
+    if not values.get("MYSQL_HOST"):
+        return False
+    apply_mysql_env_from_mapping(values)
+    return True
+
+
+def _get_openrouter_api_key() -> str:
+    return _get_secret_or_env("OPENROUTER_API_KEY")
+
+
+def _is_local_api_url(url: str) -> bool:
+    lower = url.lower()
+    return any(token in lower for token in ("127.0.0.1", "localhost", "0.0.0.0"))
+
+
+def _strip_api_key_ui(html: str) -> str:
+    """Remove API key inputs from hosted HTML so they never render in Streamlit."""
+    html = re.sub(
+        r'\s*<div id="apiKeySection">[\s\S]*?</div>\s*',
+        '\n        <input type="hidden" id="apiKey" autocomplete="off">\n',
+        html,
+        count=1,
+    )
+    html = re.sub(
+        r'\s*<p class="hint" id="apiKeyStatus"[^>]*>[\s\S]*?</p>\s*',
+        "",
+        html,
+        count=1,
+    )
+    html = re.sub(
+        r'\s*<p class="hint" id="apiHint"[^>]*>[\s\S]*?</p>\s*',
+        "",
+        html,
+        count=1,
+    )
+    return html
+
+
+def _inject_config(html: str, config: dict) -> str:
+    script_config = dict(config)
+    tts = script_config.get("lastTtsResult") or {}
+    if tts.get("audio_b64"):
+        script_config["lastTtsResult"] = {
+            k: v for k, v in tts.items() if k != "audio_b64"
+        }
+        script_config["lastTtsResult"]["has_audio"] = True
+    injection = (
+        "<script>window.__SIMULATOR_CONFIG__ = "
+        + json.dumps(script_config, ensure_ascii=False)
+        + ";</script>"
+    )
+    if config.get("hostedOnStreamlit"):
+        injection += (
+            '<script>document.documentElement.dataset.hosted="1";</script>'
+            '<style>#apiKeySection,#apiKeyStatus,#apiHint'
+            "{display:none!important}</style>"
+        )
+    cleaned = re.sub(
+        r"<script>window\.__SIMULATOR_CONFIG__\s*=\s*[\s\S]*?;</script>\s*",
+        "",
+        html,
+    )
+    cleaned = re.sub(
+        r'<script>document\.documentElement\.dataset\.hosted="1";</script>\s*',
+        "",
+        cleaned,
+    )
+    cleaned = re.sub(
+        r"<style>#apiKeySection,#apiKeyStatus,#apiHint"
+        r"\{display:none!important\}</style>\s*",
+        "",
+        cleaned,
+    )
+    if config.get("hostedOnStreamlit"):
+        cleaned = _strip_api_key_ui(cleaned)
+    tts = config.get("lastTtsResult") or {}
+    if tts.get("ok") and tts.get("audio_b64"):
+        mime = tts.get("mime") or "audio/mpeg"
+        injection += (
+            '<audio id="injectedTts" autoplay playsinline '
+            f'src="data:{mime};base64,{tts["audio_b64"]}" '
+            'style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></audio>'
+        )
+    if "</head>" in cleaned:
+        return cleaned.replace("</head>", injection + "\n</head>", 1)
+    return injection + cleaned
+
+
+def _build_static_component_html(html_path: Path) -> str:
+    html = html_path.read_text(encoding="utf-8")
+    html = re.sub(
+        r"<script>window\.__SIMULATOR_CONFIG__\s*=\s*[\s\S]*?;</script>\s*",
+        "",
+        html,
+    )
+    html = re.sub(
+        r'<script>document\.documentElement\.dataset\.hosted="1";</script>\s*',
+        "",
+        html,
+    )
+    html = re.sub(
+        r"<style>#apiKeySection,#apiKeyStatus,#apiHint"
+        r"\{display:none!important\}</style>\s*",
+        "",
+        html,
+    )
+    html = re.sub(r'<audio id="injectedTts"[\s\S]*?</audio>\s*', "", html)
+    html = _strip_api_key_ui(html)
+    if "</head>" in html:
+        return html.replace("</head>", _STREAMLIT_BOOT + "\n</head>", 1)
+    return _STREAMLIT_BOOT + html
+
+
+def _sync_component_assets(frontend_dir: Path) -> None:
+    lib_src = COMPONENT_FRONTEND / "streamlit-component-lib.js"
+    lib_dst = frontend_dir / "streamlit-component-lib.js"
+    if lib_src.exists():
+        shutil.copy2(lib_src, lib_dst)
+    avatar_js = WEB_DIR / "avatar_client.js"
+    if avatar_js.exists():
+        shutil.copy2(avatar_js, frontend_dir / "avatar_client.js")
+    viseme_js = WEB_DIR / "viseme_lipsync.js"
+    if viseme_js.exists():
+        shutil.copy2(viseme_js, frontend_dir / "viseme_lipsync.js")
+    assets_src = WEB_DIR / "assets"
+    assets_dst = frontend_dir / "assets"
+    if assets_src.is_dir():
+        assets_dst.mkdir(parents=True, exist_ok=True)
+        for asset in assets_src.iterdir():
+            if asset.is_file():
+                shutil.copy2(asset, assets_dst / asset.name)
+
+
+def _sync_component_index(html_path: Path, frontend_dir: Path) -> None:
+    frontend_dir.mkdir(parents=True, exist_ok=True)
+    stamp_file = frontend_dir / ".source_stamp"
+    stamp = hashlib.sha256(html_path.read_bytes() + _STREAMLIT_BOOT.encode("utf-8")).hexdigest()
+    if not stamp_file.exists() or stamp_file.read_text(encoding="utf-8") != stamp:
+        (frontend_dir / "index.html").write_text(
+            _build_static_component_html(html_path),
+            encoding="utf-8",
+        )
+        stamp_file.write_text(stamp, encoding="utf-8")
+    _sync_component_assets(frontend_dir)
+
+
+def _build_streamlit_config(
+    api_key: str,
+    mysql_configured: bool,
+    mysql_ok: bool,
+    extra_config: dict | None = None,
+) -> dict:
+    config: dict = {
+        "openrouterApiKey": api_key,
+        "hostedOnStreamlit": True,
+        "streamlitSave": True,
+    }
+    if extra_config:
+        config.update(extra_config)
+    agent_name = get_agent_name()
+    if agent_name:
+        config["agentName"] = agent_name
+    api_url = _get_secret_or_env("CONVERSATION_API_URL")
+
+    if mysql_configured:
+        config["mysqlEnabled"] = True
+        if not mysql_ok:
+            config["mysqlConnectionWarning"] = True
+    elif api_url and not _is_local_api_url(api_url):
+        config["conversationApiUrl"] = api_url.rstrip("/")
+        config["streamlitSave"] = False
+
+    save_feedback = st.session_state.pop("save_feedback", None)
+    if save_feedback:
+        config["lastSaveResult"] = save_feedback
+    tts_feedback = st.session_state.get("tts_feedback")
+    if tts_feedback:
+        config["lastTtsResult"] = tts_feedback
+    if _get_secret_or_env("OPENROUTER_API_KEY"):
+        config["hostedTtsEnabled"] = True
+    if _get_secret_or_env("REPLICATE_API_TOKEN"):
+        config["lipsyncCloudEnabled"] = True
+    return config
+
+
+def _payload_key(payload: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def _process_bridge_payload(payload: dict) -> bool:
+    agent_name = get_agent_name()
+    if agent_name and isinstance(payload, dict):
+        if not str(payload.get("agent_name") or "").strip():
+            payload = dict(payload)
+            payload["agent_name"] = agent_name
+    key = _payload_key(payload)
+    if st.session_state.get("last_save_key") == key:
+        return False
+    try:
+        conversation_id = save_conversation(payload)
+        st.session_state.last_save_key = key
+        st.session_state.save_feedback = {
+            "ok": True,
+            "conversation_id": conversation_id,
+        }
+    except Exception as exc:
+        st.session_state.save_feedback = {
+            "ok": False,
+            "error": str(exc),
+        }
+    return True
+
+
+def _process_eval_update(incoming: dict) -> bool:
+    conversation_id = int(incoming.get("conversation_id") or 0)
+    evaluation = incoming.get("evaluation") or {}
+    if not conversation_id:
+        return False
+    key = _payload_key({"conversation_id": conversation_id, "evaluation": evaluation})
+    update_key = f"eval:{key}"
+    if st.session_state.get("last_save_key") == update_key:
+        return False
+    try:
+        update_conversation_evaluation(conversation_id, evaluation)
+        st.session_state.last_save_key = update_key
+        st.session_state.save_feedback = {
+            "ok": True,
+            "conversation_id": conversation_id,
+            "updated": True,
+        }
+    except Exception as exc:
+        st.session_state.save_feedback = {
+            "ok": False,
+            "error": str(exc),
+            "conversation_id": conversation_id,
+        }
+    return True
+
+
+def _process_hosted_tts(incoming: dict) -> bool:
+    import base64
+
+    from ui.lipsync_cloud import generate_lipsync_video, lipsync_available
+    from ui.streamlit_tts import synthesize_speech
+
+    request_id = str(incoming.get("request_id") or "")
+    text = str(incoming.get("text") or "")
+    gender = str(incoming.get("gender") or "female")
+    tone = str(incoming.get("tone") or "calm")
+    if not request_id or not text.strip():
+        return False
+    key = _payload_key(incoming)
+    tts_key = f"tts:{key}"
+    if st.session_state.get("last_tts_key") == tts_key:
+        return False
+    try:
+        spinner_msg = "Synthèse voix française…"
+        if lipsync_available():
+            spinner_msg = "Voix + lip-sync cloud (15–45 s)…"
+        with st.spinner(spinner_msg):
+            audio = synthesize_speech(text, gender=gender, tone=tone)
+        feedback: dict = {
+            "ok": True,
+            "request_id": request_id,
+            "audio_b64": base64.b64encode(audio).decode("ascii"),
+            "mime": "audio/mpeg",
+        }
+        if lipsync_available():
+            video = generate_lipsync_video(audio, gender=gender)
+            if video:
+                feedback["video_b64"] = base64.b64encode(video).decode("ascii")
+                feedback["video_mime"] = "video/mp4"
+                feedback["lipsync"] = "replicate_wav2lip"
+        st.session_state.tts_feedback = feedback
+    except Exception as exc:
+        st.session_state.tts_feedback = {
+            "ok": False,
+            "request_id": request_id,
+            "error": str(exc),
+        }
+    st.session_state.last_tts_key = tts_key
+    return True
+
+
+def _process_tts_ack(incoming: dict) -> bool:
+    request_id = str(incoming.get("request_id") or "")
+    if not request_id:
+        return False
+    current = st.session_state.get("tts_feedback") or {}
+    if current.get("request_id") == request_id:
+        st.session_state.pop("tts_feedback", None)
+    return False
+
+
+def _handle_incoming(incoming: dict | object) -> bool:
+    if not incoming:
+        return False
+    if isinstance(incoming, dict) and incoming.get("action") == "tts_ack":
+        return _process_tts_ack(incoming)
+    if isinstance(incoming, dict) and incoming.get("action") == "update_eval":
+        return _process_eval_update(incoming)
+    if isinstance(incoming, dict) and incoming.get("action") == "hosted_tts":
+        return _process_hosted_tts(incoming)
+    if isinstance(incoming, dict) and incoming.get("action") == "save":
+        return _process_bridge_payload(incoming.get("payload") or {})
+    if isinstance(incoming, dict):
+        return _process_bridge_payload(incoming)
+    return False
+
+
+def _render_status_bar(api_key: str, mysql_enabled: bool, mysql_ok: bool, mysql_detail: str) -> None:
+    c1, c2 = st.columns(2)
+    with c1:
+        if api_key:
+            st.success("Clé OpenRouter : configurée (Secrets)")
+        else:
+            st.error("Clé OpenRouter : manquante")
+    with c2:
+        if mysql_enabled and mysql_ok:
+            st.success("MySQL : connecté (sauvegarde directe Streamlit)")
+        elif mysql_enabled:
+            st.warning(f"MySQL : {mysql_detail}")
+        else:
+            st.info("MySQL : ajoutez MYSQL_* dans Secrets Streamlit")
+
+
+def _render_save_feedback(config: dict) -> None:
+    result = config.get("lastSaveResult")
+    if not result or result.get("ok"):
+        return
+    st.error(f"Sauvegarde MySQL échouée : {result.get('error', 'erreur inconnue')}")
+
+
+def _recent_v1_training_sessions(mysql_ok: bool, limit: int = 8) -> list[dict]:
+    if not mysql_ok:
+        return []
+    try:
+        rows = list_conversations(limit=40)
+        sessions = []
+        for row in rows:
+            mode = (row.get("training_mode") or "train_agent").strip()
+            if mode not in ("train_agent", ""):
+                continue
+            sessions.append({
+                "profile": row.get("profile_key"),
+                "level": row.get("level_key"),
+                "score": row.get("score_total"),
+                "name": " ".join(
+                    part for part in (
+                        row.get("prospect_first_name"),
+                        row.get("prospect_last_name"),
+                    )
+                    if part
+                ).strip(),
+            })
+            if len(sessions) >= limit:
+                break
+        return sessions
+    except Exception:
+        return []
+
+
+def run_simulator(
+    html_path: Path,
+    *,
+    page_title: str,
+    page_icon: str = "📞",
+    iframe_height: int = 1180,
+    extra_config: dict | None = None,
+    component=simulation_app_v1,
+    frontend_dir: Path | None = None,
+    skip_page_config: bool = False,
+) -> None:
+    if not skip_page_config:
+        st.set_page_config(
+            page_title=page_title,
+            page_icon=page_icon,
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+
+    require_agent_login(compact=True)
+
+    api_key = _get_openrouter_api_key()
+    if not api_key:
+        st.error("Clé OpenRouter manquante.")
+        st.markdown(
+            "Ajoutez `OPENROUTER_API_KEY` dans :\n"
+            "- **Local** : fichier `.env` à la racine du projet\n"
+            "- **Streamlit Cloud** : *Settings → Secrets*"
+        )
+        st.stop()
+
+    mysql_enabled = _configure_mysql_env()
+    mysql_ok = False
+    mysql_detail = ""
+    if mysql_enabled:
+        if st.session_state.get("mysql_ok") is None:
+            ok, detail = check_mysql_connection()
+            st.session_state.mysql_ok = ok
+            st.session_state.mysql_detail = detail
+        mysql_ok = bool(st.session_state.mysql_ok)
+        mysql_detail = str(st.session_state.mysql_detail or "")
+
+    config = _build_streamlit_config(api_key, mysql_enabled, mysql_ok, extra_config)
+    if extra_config and extra_config.get("v1TrainingEvolution"):
+        config["recentTrainingSessions"] = _recent_v1_training_sessions(mysql_ok)
+    target_frontend = frontend_dir or (COMPONENT_FRONTEND / "v1")
+    _sync_component_index(html_path, target_frontend)
+
+    inject_global_css()
+    is_v2 = "prospect" in html_path.stem.lower() or frontend_dir and "v2" in str(frontend_dir)
+    render_hero(
+        "Mode 1 : vous êtes l'agent"
+        if not is_v2
+        else "Mode 2 : vous êtes le prospect",
+        "Entraînez-vous sur des appels sortants avec évaluation en direct."
+        if not is_v2
+        else "Jouez le client difficile — observez comment l'IA agent traite vos objections.",
+        badge="Mode 1 · Agent commercial" if not is_v2 else "Mode 2 · Prospect",
+    )
+
+    st.markdown(
+        """
+        <style>
+        .block-container { padding-top: 0; padding-bottom: 0; max-width: 100%; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    _render_save_feedback(config)
+
+    incoming = component(
+        height=iframe_height,
+        simulator_config=json.dumps(config, ensure_ascii=False),
+        key=html_path.stem,
+    )
+    if incoming and _handle_incoming(incoming):
+        st.rerun()
